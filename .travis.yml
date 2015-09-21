@@ -10,10 +10,10 @@ cache:
 before_cache:
   - rm -rf $HOME/.m2/repository/org/keycloak
 
-install: mvn install -Pdistribution -DskipTests=true -B -V
+install: mvn install -Pdistribution -Parquillian-integration-tests -Pauth-server-wildfly -DskipTests=true -B -V
 
 script:
   - mvn test -B
-  - mvn -file testsuite/integration-arquillian test -B
+  - mvn -file testsuite/integration-arquillian -Pauth-server-wildfly test -B
 
 sudo: false
