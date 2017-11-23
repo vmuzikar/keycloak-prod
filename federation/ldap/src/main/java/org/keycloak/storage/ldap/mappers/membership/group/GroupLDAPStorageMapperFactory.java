@@ -149,12 +149,20 @@ public class GroupLDAPStorageMapperFactory extends AbstractLDAPStorageMapperFact
                     .property().name(GroupMapperConfig.USER_ROLES_RETRIEVE_STRATEGY)
                                .label("User Groups Retrieve Strategy")
                                .helpText("Specify how to retrieve groups of user. LOAD_GROUPS_BY_MEMBER_ATTRIBUTE means that roles of user will be retrieved by sending LDAP query to retrieve all groups where 'member' is our user. " +
-                            "GET_GROUPS_FROM_USER_MEMBEROF_ATTRIBUTE means that groups of user will be retrieved from 'memberOf' attribute of our user. " +
+                            "GET_GROUPS_FROM_USER_MEMBEROF_ATTRIBUTE means that groups of user will be retrieved from 'memberOf' attribute of our user. Or from the other attribute specified by 'Member-Of LDAP Attribute' . " +
                             "LOAD_GROUPS_BY_MEMBER_ATTRIBUTE_RECURSIVELY is applicable just in Active Directory and it means that groups of user will be retrieved recursively with usage of LDAP_MATCHING_RULE_IN_CHAIN Ldap extension.")
                                .type(ProviderConfigProperty.LIST_TYPE)
                                .options(ROLE_RETRIEVERS)
                                .defaultValue(GroupMapperConfig.LOAD_GROUPS_BY_MEMBER_ATTRIBUTE)
                                .add()
+                    .property().name(GroupMapperConfig.MEMBEROF_LDAP_ATTRIBUTE)
+                                .label("Member-Of LDAP Attribute")
+                                .helpText("Used just when 'User Roles Retrieve Strategy' is GET_GROUPS_FROM_USER_MEMBEROF_ATTRIBUTE . " +
+                                "It specifies the name of the LDAP attribute on the LDAP user, which contains the groups, which the user is member of. " +
+                                "Usually it will be 'memberOf' and that's also the default value.")
+                                .type(ProviderConfigProperty.STRING_TYPE)
+                                .defaultValue(LDAPConstants.MEMBER_OF)
+                                .add()
                     .property().name(GroupMapperConfig.MAPPED_GROUP_ATTRIBUTES)
                                .label("Mapped Group Attributes")
                                .helpText("List of names of attributes divided by comma. This points to the list of attributes on LDAP group, which will be mapped as attributes of Group in Keycloak. " +

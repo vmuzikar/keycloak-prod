@@ -45,6 +45,7 @@ import org.keycloak.models.RoleModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.services.managers.RealmManager;
 import org.keycloak.storage.ldap.mappers.membership.role.RoleLDAPStorageMapper;
+import org.keycloak.storage.ldap.mappers.membership.role.RoleMapperConfig;
 import org.keycloak.storage.user.SynchronizationResult;
 import org.keycloak.testsuite.OAuthClient;
 import org.keycloak.testsuite.pages.AppPage;
@@ -466,6 +467,67 @@ public class LDAPRoleMappingsTest {
             keycloakRule.stopSession(session, true);
         }
 
+    }
+
+
+    // KEYCLOAK-5848
+    // Test GET_ROLES_FROM_USER_MEMBEROF_ATTRIBUTE with custom 'Member-Of LDAP Attribute'. As a workaround, we are testing this with custom attribute "street"
+    // just because it's available on all the LDAP servers
+    @Test
+    public void test05_getRolesFromUserMemberOfStrategyTest() throws Exception {
+        KeycloakSession session = keycloakRule.startSession();
+        MultivaluedHashMap<String, String> oldRoleMapperCfg;
+        try {
+            LDAPStorageProvider ldapProvider = LDAPTestUtils.getLdapProvider(session, ldapModel);
+            RealmModel appRealm = session.realms().getRealmByName("test");
+
+            // Create street attribute mapper
+            LDAPTestUtils.addUserAttributeMapper(appRealm, ldapModel, "streetMapper", "street", LDAPConstants.STREET);
+
+            // Find DN of "group1"
+            ComponentModel mapperModel = LDAPTestUtils.getSubcomponentByName(appRealm,ldapModel, "realmRolesMapper");
+            oldRoleMapperCfg = new MultivaluedHashMap<>(mapperModel.getConfig());
+            RoleLDAPStorageMapper roleMapper = LDAPTestUtils.getRoleMapper(mapperModel, ldapProvider, appRealm);
+            LDAPObject ldapRole = roleMapper.loadLDAPRoleByName("realmRole1");
+            String ldapRoleDN = ldapRole.getDn().toString();
+
+            // Create new user in LDAP. Add him some "street" referencing existing LDAP Group
+            LDAPObject carlos = LDAPTestUtils.addLDAPUser(ldapProvider, appRealm, "carloskeycloak", "Carlos", "Doel", "carlos.doel@email.org", ldapRoleDN, "1234");
+            LDAPTestUtils.updateLDAPPassword(ldapProvider, carlos, "Password1");
+
+            // Update group mapper
+            LDAPTestUtils.updateGroupMapperConfigOptions(mapperModel,
+                    RoleMapperConfig.USER_ROLES_RETRIEVE_STRATEGY, RoleMapperConfig.GET_ROLES_FROM_USER_MEMBEROF_ATTRIBUTE,
+                    RoleMapperConfig.MEMBEROF_LDAP_ATTRIBUTE, LDAPConstants.STREET);
+            appRealm.updateComponent(mapperModel);
+        } finally {
+            keycloakRule.stopSession(session, true);
+        }
+
+        session = keycloakRule.startSession();
+        try {
+            RealmModel appRealm = session.realms().getRealmByName("test");
+
+            // Get user in Keycloak. Ensure that he is member of requested group
+            UserModel carlos = session.users().getUserByUsername("carloskeycloak", appRealm);
+            Set<RoleModel> carlosRoles = carlos.getRealmRoleMappings();
+
+            RoleModel realmRole1 = appRealm.getRole("realmRole1");
+            RoleModel realmRole2 = appRealm.getRole("realmRole2");
+
+            Assert.assertTrue(carlosRoles.contains(realmRole1));
+            Assert.assertFalse(carlosRoles.contains(realmRole2));
+
+            // Revert mappers
+            ComponentModel roleMapper = LDAPTestUtils.getSubcomponentByName(appRealm,ldapModel, "realmRolesMapper");
+            roleMapper.setConfig(oldRoleMapperCfg);
+            appRealm.updateComponent(roleMapper);
+
+            ComponentModel streetMapper = LDAPTestUtils.getSubcomponentByName(appRealm,ldapModel, "streetMapper");
+            appRealm.removeComponent(streetMapper);
+        } finally {
+            keycloakRule.stopSession(session, true);
+        }
     }
 
 }
