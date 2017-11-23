@@ -4,7 +4,7 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcpkix-jdk15on</artifactId>
-      <version>1.52.0.redhat-3</version>
+      <version>1.56.0.redhat-2</version>
       <licenses>
         <license>
           <name>MIT License</name>
@@ -15,7 +15,7 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk15on</artifactId>
-      <version>1.52.0.redhat-3</version>
+      <version>1.56.0.redhat-2</version>
       <licenses>
         <license>
           <name>MIT License</name>
