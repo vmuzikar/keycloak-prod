@@ -1,0 +1,1 @@
+org.keycloak,keycloak-servlet-oauth-client,2.5.15.Final-redhat-1,Apache Software License 2.0.txt
