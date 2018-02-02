@@ -33,11 +33,11 @@
     </description>
     <groupId>org.keycloak</groupId>
     <artifactId>keycloak-parent</artifactId>
-    <version>3.4.4.Final-SNAPSHOT</version>
+    <version>3.4.5.Final-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
-        <product.rhsso.version>7.2.0.GA</product.rhsso.version>
+        <product.rhsso.version>7.2.1.GA</product.rhsso.version>
 
         <product.build-time>${timestamp}</product.build-time>
 
