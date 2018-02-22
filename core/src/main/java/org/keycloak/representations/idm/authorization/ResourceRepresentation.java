@@ -50,7 +50,6 @@ public class ResourceRepresentation {
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<PolicyRepresentation> policies;
-    private List<ScopeRepresentation> typedScopes;
 
     /**
      * Creates a new instance.
@@ -167,14 +166,6 @@ public class ResourceRepresentation {
 
     public void setOwner(ResourceOwnerRepresentation owner) {
         this.owner = owner;
-    }
-
-    public void setTypedScopes(List<ScopeRepresentation> typedScopes) {
-        this.typedScopes = typedScopes;
-    }
-
-    public List<ScopeRepresentation> getTypedScopes() {
-        return typedScopes;
     }
 
     public boolean equals(Object o) {
