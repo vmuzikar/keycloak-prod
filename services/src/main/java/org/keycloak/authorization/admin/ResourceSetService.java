@@ -212,7 +212,7 @@ public class ResourceSetService {
             return representation;
         }).collect(Collectors.toList());
 
-        if (model.getType() != null) {
+        if (model.getType() != null && !model.getOwner().equals(resourceServer.getId())) {
             ResourceStore resourceStore = authorization.getStoreFactory().getResourceStore();
             for (Resource typed : resourceStore.findByType(model.getType(), resourceServer.getId())) {
                 if (typed.getOwner().equals(resourceServer.getId()) && !typed.getId().equals(model.getId())) {
@@ -251,7 +251,8 @@ public class ResourceSetService {
 
         policies.addAll(policyStore.findByResource(model.getId(), resourceServer.getId()));
         policies.addAll(policyStore.findByResourceType(model.getType(), resourceServer.getId()));
-        policies.addAll(policyStore.findByScopeIds(model.getScopes().stream().map(scope -> scope.getId()).collect(Collectors.toList()), resourceServer.getId()));
+        policies.addAll(policyStore.findByScopeIds(model.getScopes().stream().map(scope -> scope.getId()).collect(Collectors.toList()), id, resourceServer.getId()));
+        policies.addAll(policyStore.findByScopeIds(model.getScopes().stream().map(scope -> scope.getId()).collect(Collectors.toList()), null, resourceServer.getId()));
 
         List<PolicyRepresentation> representation = new ArrayList<>();
 
