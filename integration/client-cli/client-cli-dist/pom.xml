@@ -21,7 +21,7 @@
     <parent>
         <artifactId>keycloak-client-cli-parent</artifactId>
         <groupId>org.keycloak</groupId>
-        <version>3.4.8.Final</version>
+        <version>3.4.9.Final-SNAPSHOT</version>
     </parent>
 
     <artifactId>keycloak-client-cli-dist</artifactId>
