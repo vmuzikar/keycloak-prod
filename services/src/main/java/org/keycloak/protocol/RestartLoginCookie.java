@@ -153,7 +153,12 @@ public class RestartLoginCookie {
         }
         String encodedCookie = cook.getValue();
         JWSInput input = new JWSInput(encodedCookie);
-        SecretKey secretKey = session.keys().getHmacSecretKey(realm, input.getHeader().getKeyId());
+        String kid = input.getHeader().getKeyId();
+        SecretKey secretKey = kid == null ? session.keys().getActiveHmacKey(realm).getSecretKey() : session.keys().getHmacSecretKey(realm, input.getHeader().getKeyId());
+        if (secretKey == null) {
+            logger.debug("Failed to retrieve HMAC secret key for session restart");
+            return null;
+        }
         if (!HMACProvider.verify(input, secretKey)) {
             logger.debug("Failed to verify encoded RestartLoginCookie");
             return null;
