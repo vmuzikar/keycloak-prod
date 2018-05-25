@@ -450,8 +450,6 @@ public class InfinispanUserSessionProvider implements UserSessionProvider {
 
         // Each cluster node cleanups just local sessions, which are those owned by itself (+ few more taking l1 cache into account)
         Cache<String, SessionEntityWrapper<UserSessionEntity>> localCache = CacheDecorators.localCache(sessionCache);
-        Cache<UUID, SessionEntityWrapper<AuthenticatedClientSessionEntity>> localClientSessionCache = CacheDecorators.localCache(clientSessionCache);
-
         Cache<String, SessionEntityWrapper<UserSessionEntity>> localCacheStoreIgnore = CacheDecorators.skipCacheLoaders(localCache);
 
         final AtomicInteger userSessionsSize = new AtomicInteger();
@@ -469,12 +467,12 @@ public class InfinispanUserSessionProvider implements UserSessionProvider {
                     public void accept(UserSessionEntity userSessionEntity) {
                         userSessionsSize.incrementAndGet();
 
-                        Future future = localCache.removeAsync(userSessionEntity.getId());
+                        Future future = sessionCache.removeAsync(userSessionEntity.getId());
                         futures.addTask(future);
 
                         userSessionEntity.getAuthenticatedClientSessions().forEach((clientUUID, clientSessionId) -> {
                             clientSessionsSize.incrementAndGet();
-                            Future f = localClientSessionCache.removeAsync(clientSessionId);
+                            Future f = clientSessionCache.removeAsync(clientSessionId);
                             futures.addTask(f);
                         });
                     }
@@ -482,9 +480,10 @@ public class InfinispanUserSessionProvider implements UserSessionProvider {
                 });
 
         // Removing detached clientSessions. Ignore remoteStore for stream iteration. But we will invoke remoteStore for clientSession removal propagate
-        Cache<UUID, SessionEntityWrapper<AuthenticatedClientSessionEntity>> localCacheStoreIgnoreClientSessionCache = CacheDecorators.localCache(localClientSessionCache);
+        Cache<UUID, SessionEntityWrapper<AuthenticatedClientSessionEntity>> localClientSessionCache = CacheDecorators.localCache(clientSessionCache);
+        Cache<UUID, SessionEntityWrapper<AuthenticatedClientSessionEntity>> localClientSessionCacheStoreIgnore = CacheDecorators.skipCacheLoaders(localClientSessionCache);
 
-        localCacheStoreIgnoreClientSessionCache
+        localClientSessionCacheStoreIgnore
                 .entrySet()
                 .stream()
                 .filter(AuthenticatedClientSessionPredicate.create(realm.getId()).expired(expired))
@@ -495,7 +494,7 @@ public class InfinispanUserSessionProvider implements UserSessionProvider {
                     public void accept(AuthenticatedClientSessionEntity clientSessionEntity) {
                         clientSessionsSize.incrementAndGet();
 
-                        Future future = localClientSessionCache.removeAsync(clientSessionEntity.getId());
+                        Future future = clientSessionCache.removeAsync(clientSessionEntity.getId());
                         futures.addTask(future);
                     }
 
@@ -513,7 +512,6 @@ public class InfinispanUserSessionProvider implements UserSessionProvider {
 
         // Each cluster node cleanups just local sessions, which are those owned by himself (+ few more taking l1 cache into account)
         Cache<String, SessionEntityWrapper<UserSessionEntity>> localCache = CacheDecorators.localCache(offlineSessionCache);
-        Cache<UUID, SessionEntityWrapper<AuthenticatedClientSessionEntity>> localClientSessionCache = CacheDecorators.localCache(offlineClientSessionCache);
 
         UserSessionPredicate predicate = UserSessionPredicate.create(realm.getId()).expired(null, expiredOffline);
 
@@ -536,11 +534,11 @@ public class InfinispanUserSessionProvider implements UserSessionProvider {
                     public void accept(UserSessionEntity userSessionEntity) {
                         userSessionsSize.incrementAndGet();
 
-                        Future future = localCache.removeAsync(userSessionEntity.getId());
+                        Future future = offlineSessionCache.removeAsync(userSessionEntity.getId());
                         futures.addTask(future);
                         userSessionEntity.getAuthenticatedClientSessions().forEach((clientUUID, clientSessionId) -> {
                             clientSessionsSize.incrementAndGet();
-                            Future f = localClientSessionCache.removeAsync(clientSessionId);
+                            Future f = offlineClientSessionCache.removeAsync(clientSessionId);
                             futures.addTask(f);
                         });
 
@@ -549,11 +547,11 @@ public class InfinispanUserSessionProvider implements UserSessionProvider {
                     }
                 });
 
-
         // Removing detached clientSessions. Ignore remoteStore for stream iteration. But we will invoke remoteStore for clientSession removal propagate
-        Cache<UUID, SessionEntityWrapper<AuthenticatedClientSessionEntity>> localCacheStoreIgnoreClientSessionCache = CacheDecorators.localCache(localClientSessionCache);
+        Cache<UUID, SessionEntityWrapper<AuthenticatedClientSessionEntity>> localClientSessionCache = CacheDecorators.localCache(offlineClientSessionCache);
+        Cache<UUID, SessionEntityWrapper<AuthenticatedClientSessionEntity>> localClientSessionCacheStoreIgnore = CacheDecorators.skipCacheLoaders(localClientSessionCache);
 
-        localCacheStoreIgnoreClientSessionCache
+        localClientSessionCacheStoreIgnore
                 .entrySet()
                 .stream()
                 .filter(AuthenticatedClientSessionPredicate.create(realm.getId()).expired(expiredOffline))
@@ -564,7 +562,7 @@ public class InfinispanUserSessionProvider implements UserSessionProvider {
                     public void accept(AuthenticatedClientSessionEntity clientSessionEntity) {
                         clientSessionsSize.incrementAndGet();
 
-                        Future future = localClientSessionCache.removeAsync(clientSessionEntity.getId());
+                        Future future = offlineClientSessionCache.removeAsync(clientSessionEntity.getId());
                         futures.addTask(future);
                     }
 
