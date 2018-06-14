@@ -238,7 +238,7 @@ public class DeploymentArchiveProcessor implements ApplicationArchiveProcessor {
             modifyDocElementValue(webXmlDoc, "auth-method", "KEYCLOAK", "BASIC");
         }
 
-        if (testClass.getJavaClass().isAnnotationPresent(UseServletFilter.class)) {
+        if (testClass.getJavaClass().isAnnotationPresent(UseServletFilter.class) && archive.contains(JBOSS_DEPLOYMENT_XML_PATH)) {
 
             addFilterDependencies(archive, testClass);
 
