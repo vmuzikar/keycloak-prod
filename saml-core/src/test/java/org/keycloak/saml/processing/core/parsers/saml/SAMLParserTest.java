@@ -50,6 +50,8 @@ import org.keycloak.saml.common.exceptions.ConfigurationException;
 import org.keycloak.saml.common.exceptions.ParsingException;
 import org.keycloak.saml.common.exceptions.ProcessingException;
 import org.keycloak.saml.processing.api.saml.v2.response.SAML2Response;
+import org.keycloak.saml.processing.api.saml.v2.request.SAML2Request;
+import org.keycloak.saml.processing.core.saml.v2.common.SAMLDocumentHolder;
 import org.keycloak.saml.processing.core.saml.v2.util.AssertionUtil;
 import org.w3c.dom.Element;
 
@@ -127,7 +129,8 @@ public class SAMLParserTest {
     @Test
     public void testSaml20EncryptedAssertionWithNewlines() throws Exception {
         try (InputStream st = SAMLParserTest.class.getResourceAsStream("KEYCLOAK-4489-encrypted-assertion-with-newlines.xml")) {
-            Object parsedObject = parser.parse(st);
+            SAMLDocumentHolder holder = SAML2Request.getSAML2ObjectFromStream(st);
+            Object parsedObject = holder.getSamlObject();
             assertThat(parsedObject, instanceOf(ResponseType.class));
 
             ResponseType resp = (ResponseType) parsedObject;
@@ -138,7 +141,7 @@ public class SAMLParserTest {
             assertNotNull(rtChoiceType.getEncryptedAssertion());
 
             PrivateKey privateKey = DerUtils.decodePrivateKey(Base64.decode(PRIVATE_KEY));
-            AssertionUtil.decryptAssertion(resp, privateKey);
+            AssertionUtil.decryptAssertion(holder, resp, privateKey);
 
             rtChoiceType = resp.getAssertions().get(0);
             assertNotNull(rtChoiceType.getAssertion());
