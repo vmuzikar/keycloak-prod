@@ -37,16 +37,23 @@ import org.junit.rules.ExpectedException;
 import org.keycloak.common.util.Base64;
 import org.keycloak.common.util.DerUtils;
 import org.keycloak.common.util.StreamUtil;
+import org.keycloak.dom.saml.v2.SAML2Object;
 import org.keycloak.dom.saml.v2.assertion.AssertionType;
 import org.keycloak.dom.saml.v2.assertion.AttributeStatementType;
 import org.keycloak.dom.saml.v2.assertion.AttributeType;
 import org.keycloak.dom.saml.v2.assertion.NameIDType;
 import org.keycloak.dom.saml.v2.metadata.EntityDescriptorType;
+import org.keycloak.dom.saml.v2.protocol.AuthnRequestType;
 import org.keycloak.dom.saml.v2.protocol.LogoutRequestType;
 import org.keycloak.dom.saml.v2.protocol.ResponseType;
+import org.keycloak.saml.common.exceptions.ConfigurationException;
 import org.keycloak.saml.common.exceptions.ParsingException;
+import org.keycloak.saml.common.exceptions.ProcessingException;
+import org.keycloak.saml.processing.api.saml.v2.response.SAML2Response;
 import org.keycloak.saml.processing.core.saml.v2.util.AssertionUtil;
 import org.w3c.dom.Element;
+
+import static org.junit.Assert.assertFalse;
 
 /**
  * Test class for SAML parser.
@@ -75,6 +82,20 @@ public class SAMLParserTest {
     @Before
     public void initParser() {
         this.parser = new SAMLParser();
+    }
+
+    private <T> T assertParsed(String fileName, Class<T> expectedType) throws IOException, ParsingException, ConfigurationException, ProcessingException {
+        try (InputStream st = SAMLParserTest.class.getResourceAsStream(fileName)) {
+            Object parsedObject;
+            if (SAML2Object.class.isAssignableFrom(expectedType)) {
+                parsedObject = new SAML2Response().getSAML2ObjectFromStream(st);
+            } else {
+                parsedObject = parser.parse(st);
+            }
+            assertThat(parsedObject, instanceOf(expectedType));
+
+            return expectedType.cast(parsedObject);
+        }
     }
 
     @Test
@@ -250,6 +271,30 @@ public class SAMLParserTest {
             Object parsedObject = parser.parse(st);
             assertThat(parsedObject, instanceOf(ResponseType.class));
         }
+    }
+
+    @Test //https://issues.jboss.org/browse/KEYCLOAK-7316
+    public void testAuthnRequestOptionalIsPassive() throws Exception {
+        AuthnRequestType req = assertParsed("KEYCLOAK-7316-noAtrributes.xml", AuthnRequestType.class);
+
+        assertThat("Not null!", req.isIsPassive(), is(Boolean.FALSE));  // this is different in the old parsers, but semantically equivalent
+//        assertThat("Not null!", req.isForceAuthn(), nullValue()); // <--- version for new parsers
+        assertThat("Not null!", req.isIsPassive(), is(Boolean.FALSE));  // this is different in the old parsers, but semantically equivalent
+//        assertThat("Not null!", req.isForceAuthn(), nullValue()); // <--- version for new parsers
+
+        req = assertParsed("KEYCLOAK-7316-withTrueAttributes.xml", AuthnRequestType.class);
+
+        assertThat(req.isIsPassive(), notNullValue());
+        assertTrue("Wrong value!", req.isIsPassive().booleanValue());
+        assertThat(req.isForceAuthn(), notNullValue());
+        assertTrue("Wrong value!", req.isForceAuthn().booleanValue());
+
+        req = assertParsed("KEYCLOAK-7316-withFalseAttributes.xml", AuthnRequestType.class);
+
+        assertThat(req.isIsPassive(), notNullValue());
+        assertFalse("Wrong value!", req.isIsPassive().booleanValue());
+        assertThat(req.isForceAuthn(), notNullValue());
+        assertFalse("Wrong value!", req.isForceAuthn().booleanValue());
     }
 
     @Test
