@@ -151,11 +151,14 @@ public class DeploymentArchiveProcessor implements ApplicationArchiveProcessor {
                     modifyDocElementAttribute(doc, "SingleLogoutService", "postBindingUrl", "http", "https");
                     modifyDocElementAttribute(doc, "SingleLogoutService", "redirectBindingUrl", "8080", System.getProperty("auth.server.https.port"));
                     modifyDocElementAttribute(doc, "SingleLogoutService", "redirectBindingUrl", "http", "https");
+                    modifyDocElementAttribute(doc, "SP", "logoutPage", "8081", System.getProperty("app.server.https.port"));
+                    modifyDocElementAttribute(doc, "SP", "logoutPage", "http", "https");
                 } else {
                     modifyDocElementAttribute(doc, "SingleSignOnService", "bindingUrl", "8080", System.getProperty("auth.server.http.port"));
                     modifyDocElementAttribute(doc, "SingleSignOnService", "assertionConsumerServiceUrl", "8081", System.getProperty("app.server.http.port"));
                     modifyDocElementAttribute(doc, "SingleLogoutService", "postBindingUrl", "8080", System.getProperty("auth.server.http.port"));
                     modifyDocElementAttribute(doc, "SingleLogoutService", "redirectBindingUrl", "8080", System.getProperty("auth.server.http.port"));
+                    modifyDocElementAttribute(doc, "SP", "logoutPage", "8081", System.getProperty("app.server.http.port"));
                 }
 
                 archive.add(new StringAsset(IOUtil.documentToString(doc)), adapterConfigPath);
@@ -224,13 +227,18 @@ public class DeploymentArchiveProcessor implements ApplicationArchiveProcessor {
     }
 
     protected void modifyWebXml(Archive<?> archive, TestClass testClass) {
-        Document webXmlDoc = loadXML(
-                archive.get(WEBXML_PATH).getAsset().openStream());
+        Document webXmlDoc;
+        try {
+            webXmlDoc = loadXML(
+              archive.get(WEBXML_PATH).getAsset().openStream());
+        } catch (Exception ex) {
+            throw new RuntimeException("Error when processing " + archive.getName(), ex);
+        }
         if (isTomcatAppServer(testClass.getJavaClass())) {
             modifyDocElementValue(webXmlDoc, "auth-method", "KEYCLOAK", "BASIC");
         }
 
-        if (testClass.getJavaClass().isAnnotationPresent(UseServletFilter.class)) {
+        if (testClass.getJavaClass().isAnnotationPresent(UseServletFilter.class) && archive.contains(JBOSS_DEPLOYMENT_XML_PATH)) {
 
             addFilterDependencies(archive, testClass);
 
