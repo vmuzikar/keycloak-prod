@@ -1,7 +1,6 @@
 package org.keycloak.testsuite.adapter.page;
 
 import org.keycloak.testsuite.page.AbstractPage;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 
@@ -33,9 +32,9 @@ public class Hawtio2Page extends AbstractPage {
     private WebElement logoutButton;
 
     public void logout() {
-        waitUntilElement(dropDownMenu).is().visible();
+        waitUntilElement(dropDownMenu).is().clickable();
         dropDownMenu.click();
-        waitUntilElement(logoutButton).is().visible();
+        waitUntilElement(logoutButton).is().clickable();
         logoutButton.click();
     }
 }
