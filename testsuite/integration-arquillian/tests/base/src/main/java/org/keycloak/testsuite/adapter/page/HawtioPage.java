@@ -32,13 +32,15 @@ public class HawtioPage extends AbstractPage {
     @FindBy(xpath = "//a[@ng-click='logout()']")
     private WebElement logoutButton;
 
+    @FindBy(xpath = "//input[@type='submit' and @value='Yes']")
+    private WebElement modal;
+    
     public void logout() {
-        waitUntilElement(dropDownMenu).is().visible();
+        waitUntilElement(dropDownMenu).is().clickable();
         dropDownMenu.click();
-        waitUntilElement(logoutButton).is().visible();
+        waitUntilElement(logoutButton).is().clickable();
         logoutButton.click();
-        By modal = By.xpath("//input[@type='submit' and @value='Yes']");
-        waitUntilElement(modal).is().visible();
-        driver.findElement(modal).click();
+        waitUntilElement(modal).is().clickable();
+        modal.click();
     }
 }

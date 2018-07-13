@@ -23,6 +23,9 @@ import org.keycloak.testsuite.util.WaitUtils;
 import java.util.Arrays;
 import java.util.List;
 import org.hamcrest.Matchers;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import org.jboss.arquillian.graphene.page.Page;
 import org.junit.Test;
 import org.openqa.selenium.By;
@@ -51,7 +54,7 @@ public class Fuse70AdminAdapterTest extends AbstractFuseAdminAdapterTest {
         testRealmLoginPage.form().login("root", "password");
         assertCurrentUrlStartsWith(hawtioPage.toString(), hawtioPage.getDriver());
         WaitUtils.waitForPageToLoad();
-        WaitUtils.waitUntilElement(By.linkText("Camel"));
+        WaitUtils.waitUntilElement(By.xpath("//img[@alt='Red Hat Fuse Management Console']")).is().present();
         hawtioPage.logout();
         WaitUtils.waitForPageToLoad();
 
@@ -60,10 +63,16 @@ public class Fuse70AdminAdapterTest extends AbstractFuseAdminAdapterTest {
         hawtioPage.navigateTo();
         WaitUtils.waitForPageToLoad();
 
+        log.debug("logging in as mary");
         testRealmLoginPage.form().login("mary", "password");
         assertCurrentUrlStartsWith(hawtioPage.toString(), hawtioPage.getDriver());
         WaitUtils.waitForPageToLoad();
-        WaitUtils.waitUntilElementIsNotPresent(By.linkText("Camel"));
+        assertThat(driver.getPageSource(), 
+                allOf(
+                    containsString("keycloak-session-iframe"),//todo check this if it's correct
+                    not(containsString("Camel"))
+                )
+        );
     }
 
     @Test

@@ -44,6 +44,7 @@ import org.apache.sshd.client.channel.ChannelExec;
 import org.apache.sshd.client.channel.ClientChannel.Streaming;
 import org.apache.sshd.client.channel.ClientChannelEvent;
 import org.hamcrest.Matchers;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -87,8 +88,16 @@ public abstract class AbstractFuseAdminAdapterTest extends AbstractExampleAdapte
         assertCurrentUrlStartsWith(testRealmLoginPage);
         
         hawtioPage.navigateTo();
+        log.debug("logging in as mary");
         testRealmLoginPage.form().login("mary", "password");
-        assertThat(driver.getPageSource(), not(containsString("welcome")));
+        log.debug("Previous WARN waitForPageToLoad time exceeded! is expected");
+        
+        assertThat(driver.getPageSource(), 
+                allOf(
+                    containsString("Unauthorized User"),
+                    not(containsString("welcome"))
+                )
+        );
     }
     
     
