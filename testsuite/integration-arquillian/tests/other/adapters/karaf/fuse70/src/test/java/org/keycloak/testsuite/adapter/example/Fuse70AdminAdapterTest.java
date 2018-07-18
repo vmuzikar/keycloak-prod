@@ -23,7 +23,6 @@ import org.keycloak.testsuite.util.WaitUtils;
 import java.util.Arrays;
 import java.util.List;
 import org.hamcrest.Matchers;
-import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import org.jboss.arquillian.graphene.page.Page;
@@ -67,12 +66,8 @@ public class Fuse70AdminAdapterTest extends AbstractFuseAdminAdapterTest {
         testRealmLoginPage.form().login("mary", "password");
         assertCurrentUrlStartsWith(hawtioPage.toString(), hawtioPage.getDriver());
         WaitUtils.waitForPageToLoad();
-        assertThat(driver.getPageSource(), 
-                allOf(
-                    containsString("keycloak-session-iframe"),//todo check this if it's correct
-                    not(containsString("Camel"))
-                )
-        );
+        WaitUtils.waitUntilElement(By.xpath("//img[@alt='Red Hat Fuse Management Console']")).is().present();
+        assertThat(driver.getPageSource(), not(containsString("Camel")));
     }
 
     @Test
