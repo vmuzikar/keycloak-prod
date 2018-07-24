@@ -139,11 +139,6 @@ public class HierarchicalPathBasedKeycloakConfigResolverTest {
         }
 
         @Override
-        public InputStream getInputStream(boolean buffered) {
-            return null;
-        }
-
-        @Override
         public String getRemoteAddr() {
             return null;
         }
