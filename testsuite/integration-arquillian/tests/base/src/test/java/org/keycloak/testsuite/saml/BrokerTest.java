@@ -63,8 +63,6 @@ import static org.keycloak.testsuite.util.SamlClient.Binding.REDIRECT;
  */
 public class BrokerTest extends AbstractSamlTest {
 
-    public static final String SAML_BROKER_ALIAS = "saml-broker";
-
     private IdentityProviderRepresentation addIdentityProvider(String samlEndpoint) {
         IdentityProviderRepresentation identityProvider = IdentityProviderBuilder.create()
           .providerId(SAMLIdentityProviderFactory.PROVIDER_ID)
@@ -78,6 +76,85 @@ public class BrokerTest extends AbstractSamlTest {
           .setAttribute(SAMLIdentityProviderConfig.BACKCHANNEL_SUPPORTED, "false")
           .build();
         return identityProvider;
+    }
+
+    private SAML2Object createAuthnResponse(SAML2Object so) {
+        AuthnRequestType req = (AuthnRequestType) so;
+        try {
+            final ResponseType res = new SAML2LoginResponseBuilder()
+              .requestID(req.getID())
+              .destination(req.getAssertionConsumerServiceURL().toString())
+              .issuer("http://saml.idp/saml")
+              .assertionExpiration(1000000)
+              .subjectExpiration(1000000)
+              .requestIssuer(getAuthServerRealmBase(REALM_NAME).toString())
+              .sessionIndex("idp:" + UUID.randomUUID())
+              .buildModel();
+
+            AttributeStatementType attrStatement = new AttributeStatementType();
+            AttributeType attribute = new AttributeType("mail");
+            attribute.addAttributeValue("v@w.x");
+            attrStatement.addAttribute(new ASTChoiceType(attribute));
+
+            res.getAssertions().get(0).getAssertion().addStatement(attrStatement);
+
+            return res;
+        } catch (ConfigurationException | ProcessingException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Test
+    public void testLogoutPropagatesToSamlIdentityProvider() throws IOException {
+        final RealmResource realm = adminClient.realm(REALM_NAME);
+        final ClientsResource clients = realm.clients();
+
+        AuthenticationExecutionInfoRepresentation reviewProfileAuthenticator = null;
+        String firstBrokerLoginFlowAlias = null;
+        try (IdentityProviderCreator idp = new IdentityProviderCreator(realm, addIdentityProvider("http://saml.idp/saml"))) {
+            IdentityProviderRepresentation idpRepresentation = idp.identityProvider().toRepresentation();
+            firstBrokerLoginFlowAlias = idpRepresentation.getFirstBrokerLoginFlowAlias();
+            List<AuthenticationExecutionInfoRepresentation> executions = realm.flows().getExecutions(firstBrokerLoginFlowAlias);
+            reviewProfileAuthenticator = executions.stream()
+              .filter(ex -> Objects.equals(ex.getProviderId(), IdpReviewProfileAuthenticatorFactory.PROVIDER_ID))
+              .findFirst()
+              .orElseGet(() -> { Assert.fail("Could not find update profile in first broker login flow"); return null; });
+
+            reviewProfileAuthenticator.setRequirement(Requirement.DISABLED.name());
+            realm.flows().updateExecutions(firstBrokerLoginFlowAlias, reviewProfileAuthenticator);
+
+            SAMLDocumentHolder samlResponse = new SamlClientBuilder()
+              .authnRequest(getAuthServerSamlEndpoint(REALM_NAME), SAML_CLIENT_ID_SALES_POST, SAML_ASSERTION_CONSUMER_URL_SALES_POST, POST)
+                .transformObject(ar -> {
+                    NameIDPolicyType nameIDPolicy = new NameIDPolicyType();
+                    nameIDPolicy.setAllowCreate(Boolean.TRUE);
+                    nameIDPolicy.setFormat(URI.create(JBossSAMLURIConstants.NAMEID_FORMAT_EMAIL.get()));
+
+                    ar.setNameIDPolicy(nameIDPolicy);
+                    return ar;
+                })
+                .build()
+
+              .login().idp(SAML_BROKER_ALIAS).build()
+
+              // Virtually perform login at IdP (return artificial SAML response)
+              .processSamlResponse(REDIRECT)
+                .transformObject(this::createAuthnResponse)
+                .targetAttributeSamlResponse()
+                .targetUri(getSamlBrokerUrl(REALM_NAME))
+                .build()
+              .followOneRedirect()  // first-broker-login
+              .followOneRedirect()  // after-first-broker-login
+              .getSamlResponse(POST);
+
+            assertThat(samlResponse.getSamlObject(), isSamlStatusResponse(
+              JBossSAMLURIConstants.STATUS_RESPONDER,
+              JBossSAMLURIConstants.STATUS_INVALID_NAMEIDPOLICY
+            ));
+        } finally {
+            reviewProfileAuthenticator.setRequirement(Requirement.REQUIRED.name());
+            realm.flows().updateExecutions(firstBrokerLoginFlowAlias, reviewProfileAuthenticator);
+        }
     }
 
     @Test

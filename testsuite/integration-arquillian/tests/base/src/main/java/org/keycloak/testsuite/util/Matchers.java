@@ -25,6 +25,7 @@ import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.testsuite.util.matchers.*;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.http.HttpResponse;
@@ -147,10 +148,10 @@ public class Matchers {
      * @param expectedStatusCode
      * @return
      */
-    public static <T> Matcher<SAML2Object> isSamlStatusResponse(JBossSAMLURIConstants expectedStatus) {
+    public static <T> Matcher<SAML2Object> isSamlStatusResponse(JBossSAMLURIConstants... expectedStatus) {
         return allOf(
           instanceOf(StatusResponseType.class),
-          new SamlStatusResponseTypeMatcher(is(URI.create(expectedStatus.get())))
+          new SamlStatusResponseTypeMatcher(Arrays.stream(expectedStatus).map(c -> URI.create(c.get())).toArray(i -> new URI[i]))
         );
     }
 }
