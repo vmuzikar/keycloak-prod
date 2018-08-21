@@ -363,6 +363,20 @@ public class SAMLEntityDescriptorParser extends AbstractDescriptorParser impleme
                 StaxParserUtil.validate(endElement, JBossSAMLConstants.ATTRIBUTE_SERVICE.get());
 
                 attributeAuthority.addAttributeService(endpoint);
+            } else if (JBossSAMLConstants.ASSERTION_ID_REQUEST_SERVICE.get().equalsIgnoreCase(localPart)) {
+                startElement = StaxParserUtil.getNextStartElement(xmlEventReader);
+                Attribute bindingAttr = startElement.getAttributeByName(new QName(JBossSAMLConstants.BINDING.get()));
+                String binding = StaxParserUtil.getAttributeValue(bindingAttr);
+
+                Attribute locationAttr = startElement.getAttributeByName(new QName(JBossSAMLConstants.LOCATION.get()));
+                String location = StaxParserUtil.getAttributeValue(locationAttr);
+
+                IndexedEndpointType endpoint = new IndexedEndpointType(URI.create(binding), URI.create(location));
+
+                EndElement endElement = StaxParserUtil.getNextEndElement(xmlEventReader);
+                StaxParserUtil.validate(endElement, JBossSAMLConstants.ASSERTION_ID_REQUEST_SERVICE.get());
+
+                attributeAuthority.addAssertionIDRequestService(endpoint);
             } else if (JBossSAMLConstants.ATTRIBUTE_PROFILE.get().equalsIgnoreCase(localPart)) {
                 startElement = StaxParserUtil.getNextStartElement(xmlEventReader);
                 attributeAuthority.addAttributeProfile(StaxParserUtil.getElementText(xmlEventReader));

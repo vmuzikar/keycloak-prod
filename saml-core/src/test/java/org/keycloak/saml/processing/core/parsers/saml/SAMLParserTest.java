@@ -46,6 +46,7 @@ import org.keycloak.dom.saml.v2.metadata.EntityDescriptorType;
 import org.keycloak.dom.saml.v2.protocol.AuthnRequestType;
 import org.keycloak.dom.saml.v2.protocol.LogoutRequestType;
 import org.keycloak.dom.saml.v2.protocol.ResponseType;
+import org.keycloak.dom.saml.v2.protocol.StatusResponseType;
 import org.keycloak.saml.common.exceptions.ConfigurationException;
 import org.keycloak.saml.common.exceptions.ParsingException;
 import org.keycloak.saml.common.exceptions.ProcessingException;
@@ -53,6 +54,7 @@ import org.keycloak.saml.processing.api.saml.v2.response.SAML2Response;
 import org.keycloak.saml.processing.api.saml.v2.request.SAML2Request;
 import org.keycloak.saml.processing.core.saml.v2.common.SAMLDocumentHolder;
 import org.keycloak.saml.processing.core.saml.v2.util.AssertionUtil;
+import java.net.URI;
 import org.w3c.dom.Element;
 
 import static org.junit.Assert.assertFalse;
@@ -274,6 +276,54 @@ public class SAMLParserTest {
             Object parsedObject = parser.parse(st);
             assertThat(parsedObject, instanceOf(ResponseType.class));
         }
+    }
+
+    @Test
+    public void testLogoutResponseStatusDetail() throws Exception {
+        StatusResponseType resp = assertParsed("saml20-logout-response-status-detail.xml", StatusResponseType.class);
+
+        assertThat(resp.getIssuer(), notNullValue());
+        assertThat(resp.getIssuer().getValue(), is("http://idp.example.com/metadata.php"));
+
+        assertThat(resp.getStatus(), notNullValue());
+
+        assertThat(resp.getStatus().getStatusDetail(), notNullValue());
+        assertThat(resp.getStatus().getStatusDetail().getAny(), notNullValue());
+        assertThat(resp.getStatus().getStatusDetail().getAny().size(), is(2));
+
+        assertThat(resp.getStatus().getStatusCode(), notNullValue());
+        assertThat(resp.getStatus().getStatusCode().getValue(), is(URI.create("urn:oasis:names:tc:SAML:2.0:status:Responder")));
+
+        assertThat(resp.getStatus().getStatusCode().getStatusCode(), nullValue());
+    }
+
+    @Test
+    public void testLogoutResponseSimpleStatus() throws Exception {
+        StatusResponseType resp = assertParsed("saml20-logout-response-status.xml", StatusResponseType.class);
+
+        assertThat(resp.getStatus(), notNullValue());
+
+        assertThat(resp.getStatus().getStatusMessage(), is("Status Message"));
+
+        assertThat(resp.getStatus().getStatusCode(), notNullValue());
+        assertThat(resp.getStatus().getStatusCode().getValue(), is(URI.create("urn:oasis:names:tc:SAML:2.0:status:Responder")));
+
+        assertThat(resp.getStatus().getStatusCode().getStatusCode(), nullValue());
+    }
+
+    @Test
+    public void testLogoutResponseNestedStatus() throws Exception {
+        StatusResponseType resp = assertParsed("saml20-logout-response-nested-status.xml", StatusResponseType.class);
+
+        assertThat(resp.getStatus(), notNullValue());
+
+        assertThat(resp.getStatus().getStatusCode(), notNullValue());
+        assertThat(resp.getStatus().getStatusCode().getValue(), is(URI.create("urn:oasis:names:tc:SAML:2.0:status:Responder")));
+
+        assertThat(resp.getStatus().getStatusCode().getStatusCode(), notNullValue());
+        assertThat(resp.getStatus().getStatusCode().getStatusCode().getValue(), is(URI.create("urn:oasis:names:tc:SAML:2.0:status:AuthnFailed")));
+
+        assertThat(resp.getStatus().getStatusCode().getStatusCode().getStatusCode(), nullValue());
     }
 
     @Test //https://issues.jboss.org/browse/KEYCLOAK-7316

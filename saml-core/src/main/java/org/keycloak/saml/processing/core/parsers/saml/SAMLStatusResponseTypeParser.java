@@ -164,10 +164,19 @@ public abstract class SAMLStatusResponseTypeParser {
                 startElement = StaxParserUtil.getNextStartElement(xmlEventReader);
                 if (startElement == null)
                     break;
-                Element domElement = StaxParserUtil.getDOMElement(xmlEventReader);
+
                 StatusDetailType statusDetailType = new StatusDetailType();
-                statusDetailType.addStatusDetail(domElement);
+                while (! StaxParserUtil.peek(xmlEventReader).isEndElement()) {
+                    Element domElement = StaxParserUtil.getDOMElement(xmlEventReader);
+                    statusDetailType.addStatusDetail(domElement);
+                }
+
                 status.setStatusDetail(statusDetailType);
+
+                // Go to StatusDetail end element.
+                EndElement endElement = StaxParserUtil.getNextEndElement(xmlEventReader);
+                StaxParserUtil.validate(endElement, JBossSAMLConstants.STATUS_DETAIL.get());
+                continue;
             }
 
             // Get the next end element
