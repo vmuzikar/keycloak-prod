@@ -62,6 +62,7 @@ import org.keycloak.testsuite.forms.PassThroughAuthenticator;
 import org.keycloak.testsuite.forms.PassThroughClientAuthenticator;
 import org.keycloak.testsuite.rest.representation.AuthenticatorState;
 import org.keycloak.testsuite.rest.resource.TestCacheResource;
+import org.keycloak.testsuite.rest.resource.TestLDAPResource;
 import org.keycloak.testsuite.rest.resource.TestingExportImportResource;
 import org.keycloak.testsuite.runonserver.ModuleUtil;
 import org.keycloak.testsuite.runonserver.FetchOnServer;
@@ -571,6 +572,13 @@ public class TestingResourceProvider implements RealmResourceProvider {
     }
 
 
+    @Path("/ldap/{realm}")
+    public TestLDAPResource ldap(@PathParam("realm") final String realmName) {
+        RealmModel realm = session.realms().getRealmByName(realmName);
+        return new TestLDAPResource(session, realm);
+    }
+
+
     @Override
     public void close() {
     }
@@ -680,6 +688,7 @@ public class TestingResourceProvider implements RealmResourceProvider {
 
         return reps;
     }
+
 
     @GET
     @Path("/identity-config")
