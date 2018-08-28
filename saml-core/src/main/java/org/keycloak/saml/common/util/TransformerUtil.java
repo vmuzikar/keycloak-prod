@@ -228,11 +228,17 @@ public class TransformerUtil {
 
                 StartElement rootElement = (StartElement) xmlEvent;
                 rootTag = StaxParserUtil.getStartElementName(rootElement);
-                Element docRoot = handleStartElement(xmlEventReader, rootElement, new CustomHolder(doc, false));
+                CustomHolder holder = new CustomHolder(doc, false);
+                Element docRoot = handleStartElement(xmlEventReader, rootElement, holder);
                 Node parent = doc.importNode(docRoot, true);
                 doc.appendChild(parent);
 
                 stack.push(parent);
+
+                if (holder.encounteredTextNode) {
+                    // Handling text node skips over the corresponding end element, see {@link XMLEventReader#getElementText()}
+                    return;
+                }
 
                 while (xmlEventReader.hasNext()) {
                     xmlEvent = StaxParserUtil.getNextEvent(xmlEventReader);
@@ -240,7 +246,7 @@ public class TransformerUtil {
                     switch (type) {
                         case XMLEvent.START_ELEMENT:
                             StartElement startElement = (StartElement) xmlEvent;
-                            CustomHolder holder = new CustomHolder(doc, false);
+                            holder = new CustomHolder(doc, false);
                             Element docStartElement = handleStartElement(xmlEventReader, startElement, holder);
                             Node el = doc.importNode(docStartElement, true);
 
