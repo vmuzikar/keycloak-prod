@@ -412,6 +412,13 @@ public class SAMLEndpoint {
                     identity.setToken(samlResponse);
                 }
 
+                if (AssertionUtil.hasExpired(assertion)) {
+                    logger.error("Assertion expired.");
+                    event.event(EventType.IDENTITY_PROVIDER_RESPONSE);
+                    event.error(Errors.INVALID_SAML_RESPONSE);
+                    return ErrorPage.error(session, null, Response.Status.BAD_REQUEST, Messages.EXPIRED_CODE);
+                }
+
                 AuthnStatementType authn = null;
                 for (Object statement : assertion.getStatements()) {
                     if (statement instanceof AuthnStatementType) {
