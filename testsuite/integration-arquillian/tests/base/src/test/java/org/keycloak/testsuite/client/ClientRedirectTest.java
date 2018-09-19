@@ -96,9 +96,13 @@ public class ClientRedirectTest extends AbstractTestRealmKeycloakTest {
     public void testRedirectToDisabledClientRedirectURI() throws Exception {
         log.debug("Creating disabled-client with redirect uri \"*\"");
         String clientId;
-        try (Response create = adminClient.realm("test").clients().create(ClientBuilder.create().clientId("disabled-client").enabled(false).redirectUris("*").build())) {
+        Response create = null;
+        try {
+            create = adminClient.realm("test").clients().create(ClientBuilder.create().clientId("disabled-client").enabled(false).redirectUris("*").build()); 
             clientId = ApiUtil.getCreatedId(create);
             assertThat(create, statusCodeIs(Status.CREATED));
+        } finally {
+            if (create != null) create.close();
         }
 
         try {
