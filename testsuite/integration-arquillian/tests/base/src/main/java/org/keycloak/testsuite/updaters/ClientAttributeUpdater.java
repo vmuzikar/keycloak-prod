@@ -64,6 +64,11 @@ public class ClientAttributeUpdater {
         return this;
     }
 
+    public ClientAttributeUpdater setAdminUrl(String adminUrl) {
+        rep.setAdminUrl(adminUrl);
+        return this;
+    }
+
     public Closeable update() {
         clientResource.update(rep);
 
