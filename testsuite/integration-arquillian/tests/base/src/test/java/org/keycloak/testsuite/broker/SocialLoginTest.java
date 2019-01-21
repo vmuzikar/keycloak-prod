@@ -250,6 +250,7 @@ public class SocialLoginTest extends AbstractKeycloakTest {
     }
 
 
+
     @Test
     public void githubLogin() throws InterruptedException {
         currentTestProvider = GITHUB;
@@ -334,8 +335,7 @@ public class SocialLoginTest extends AbstractKeycloakTest {
             log.infof("performing log in to '%s' ...", currentTestProvider.id());
             AbstractSocialLoginPage loginPage = Graphene.createPageFragment(currentTestProvider.pageObjectClazz(), driver.findElement(By.tagName("html")));
             loginPage.login(getConfig("username"), getConfig("password"));
-        }
-        else {
+        } else {
             log.infof("already logged in to '%s'; skipping the login process", currentTestProvider.id());
         }
         WaitUtils.pause(3000);
