@@ -222,7 +222,7 @@ public class OAuthClient {
         fillLoginForm(username, password);
     }
 
-    private static CloseableHttpClient newCloseableHttpClient() {
+    public static CloseableHttpClient newCloseableHttpClient() {
         if (sslRequired) {
             KeyStore keystore = null;
             // load the keystore containing the client certificate - keystore type is probably jks or pkcs12
