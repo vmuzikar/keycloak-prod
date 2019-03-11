@@ -69,7 +69,7 @@ public class URLProvider extends URLResourceProvider {
             try {
                 for (Annotation a : qualifiers) {
                     if (OperateOnDeployment.class.isAssignableFrom(a.annotationType())) {
-                        return new URL(protocol + "://localhost:" + port + "/" + ((OperateOnDeployment) a).value());
+                        return new URL(protocol + "://localhost:" + port + "/" + ((OperateOnDeployment) a).value() + "/");
                     }
                 }
             } catch (MalformedURLException ex) {
