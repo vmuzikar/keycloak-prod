@@ -160,6 +160,10 @@ public final class TestContext {
         this.testRealmReps.add(testRealmRep);
     }
 
+    public void addTestRealmsToTestRealmReps(List<RealmRepresentation> testRealmReps) {
+        this.testRealmReps.addAll(testRealmReps);
+    }
+
     public boolean isInitialized() {
         return initialized;
     }
