@@ -21,13 +21,10 @@ The artifacts are used by the Arquillian TestSuite.
 ### App Server
 
 - JBoss
- - JBossAS 7
- - Wildfly 8, 9, 10
- - EAP 6, 7
- - Relative (Wildfly 10 / EAP 7)
-- Karaf / Fuse
- - Karaf 3
- - Fuse 6.1, 6.2
+  - JBossAS 7
+  - Wildfly 8, 9, 10
+  - EAP 6, 7
+  - Relative (Wildfly 10 / EAP 7)
 - Tomcat
  - Tomcat 7, 8
 
