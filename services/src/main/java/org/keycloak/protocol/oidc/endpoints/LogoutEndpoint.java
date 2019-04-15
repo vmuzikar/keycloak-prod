@@ -124,6 +124,10 @@ public class LogoutEndpoint {
                 idToken = tokenManager.verifyIDTokenSignature(session, encodedIdToken);
                 TokenVerifier.createWithoutSignature(idToken).tokenType(TokenUtil.TOKEN_TYPE_ID).verify();
                 userSession = session.sessions().getUserSession(realm, idToken.getSessionState());
+
+                if (userSession != null) {
+                    checkTokenIssuedAt(idToken, userSession);
+                }
             } catch (OAuthErrorException | VerificationException e) {
                 event.event(EventType.LOGOUT);
                 event.error(Errors.INVALID_TOKEN);
@@ -202,6 +206,7 @@ public class LogoutEndpoint {
             }
 
             if (userSessionModel != null) {
+                checkTokenIssuedAt(token, userSessionModel);
                 logout(userSessionModel, offline);
             }
         } catch (OAuthErrorException e) {
@@ -247,5 +252,11 @@ public class LogoutEndpoint {
         Response response =  AuthenticationManager.browserLogout(session, realm, userSession, session.getContext().getUri(), clientConnection, headers, initiatingIdp);
         logger.debug("finishing OIDC browser logout");
         return response;
+    }
+
+    private void checkTokenIssuedAt(IDToken token, UserSessionModel userSession) throws OAuthErrorException {
+        if (token.getIssuedAt() + 1 < userSession.getStarted()) {
+            throw new OAuthErrorException(OAuthErrorException.INVALID_GRANT, "Refresh toked issued before the user session started");
+        }
     }
 }

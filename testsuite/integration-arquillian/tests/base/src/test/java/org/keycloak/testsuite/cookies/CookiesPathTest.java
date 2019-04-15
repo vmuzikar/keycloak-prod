@@ -64,7 +64,7 @@ public class CookiesPathTest extends AbstractKeycloakTest {
 
     private CloseableHttpClient httpClient = null;
 
-    private static List<String> KEYCLOAK_COOKIE_NAMES = Arrays.asList("KC_RESTART", "AUTH_SESSION_ID", "KEYCLOAK_IDENTITY", "KEYCLOAK_SESSION");
+    private static final List<String> KEYCLOAK_COOKIE_NAMES = Arrays.asList("KC_RESTART", "AUTH_SESSION_ID", "KEYCLOAK_IDENTITY", "KEYCLOAK_SESSION");
 
     @After
     public void closeHttpClient() throws IOException {
@@ -144,7 +144,7 @@ public class CookiesPathTest extends AbstractKeycloakTest {
                 Matchers.hasItems("AUTH_SESSION_ID", "KEYCLOAK_IDENTITY", "KEYCLOAK_SESSION"));
 
         // does each cookie's path end with "/"
-        cookieStore.getCookies().stream().map(org.apache.http.cookie.Cookie::getPath).forEach(path ->Assert.assertThat(path, Matchers.endsWith("/")));
+        cookieStore.getCookies().stream().filter(c -> !"OAuth_Token_Request_State".equals(c.getName())).map(org.apache.http.cookie.Cookie::getPath).forEach(path ->Assert.assertThat(path, Matchers.endsWith("/")));
 
         // KEYCLOAK_SESSION should end by AUTH_SESSION_ID value
         String authSessionId = cookieStore.getCookies().stream().filter(c -> "AUTH_SESSION_ID".equals(c.getName())).findFirst().get().getValue();
@@ -213,7 +213,7 @@ public class CookiesPathTest extends AbstractKeycloakTest {
                 Matchers.hasItems("AUTH_SESSION_ID", "KEYCLOAK_IDENTITY", "KEYCLOAK_SESSION"));
 
         // does each cookie's path end with "/"
-        cookieStore.getCookies().stream().map(org.apache.http.cookie.Cookie::getPath).forEach(path ->Assert.assertThat(path, Matchers.endsWith("/")));
+        cookieStore.getCookies().stream().filter(c -> !"OAuth_Token_Request_State".equals(c.getName())).map(org.apache.http.cookie.Cookie::getPath).forEach(path ->Assert.assertThat(path, Matchers.endsWith("/")));
 
         // KEYCLOAK_SESSION should end by AUTH_SESSION_ID value
         String authSessionId = cookieStore.getCookies().stream().filter(c -> "AUTH_SESSION_ID".equals(c.getName())).findFirst().get().getValue();
