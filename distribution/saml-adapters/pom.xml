@@ -20,7 +20,7 @@
     <parent>
         <artifactId>keycloak-distribution-parent</artifactId>
         <groupId>org.keycloak</groupId>
-        <version>4.8.7.Final</version>
+        <version>4.8.8.Final-SNAPSHOT</version>
     </parent>
 
     <name>SAML Adapters Distribution Parent</name>
