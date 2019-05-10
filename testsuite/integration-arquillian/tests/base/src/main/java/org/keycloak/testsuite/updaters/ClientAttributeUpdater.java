@@ -94,6 +94,10 @@ public class ClientAttributeUpdater extends ServerResourceUpdater<ClientAttribut
         return this;
     }
 
+    public ProtocolMappersUpdater protocolMappers() {
+        return new ProtocolMappersUpdater(resource.getProtocolMappers());
+    }
+
     public RoleScopeUpdater realmRoleScope() {
         return new RoleScopeUpdater(resource.getScopeMappings().realmLevel());
     }

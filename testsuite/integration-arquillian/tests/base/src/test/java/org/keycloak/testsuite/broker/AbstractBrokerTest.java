@@ -53,6 +53,7 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
     public static final String ROLE_USER = "user";
     public static final String ROLE_MANAGER = "manager";
     public static final String ROLE_FRIENDLY_MANAGER = "friendly-manager";
+    public static final String ROLE_USER_DOT_GUIDE = "user.guide";
 
     protected IdentityProviderResource identityProviderResource;
 
@@ -62,6 +63,7 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
 
     @Before
     public void beforeBrokerTest() {
+        super.beforeBrokerTest();
         log.debug("creating user for realm " + bc.providerRealmName());
 
         UserRepresentation user = new UserRepresentation();
@@ -74,13 +76,6 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
         userId = createUserWithAdminClient(realmResource, user);
 
         resetUserPassword(realmResource.users().get(userId), bc.getUserPassword(), false);
-
-        if (testContext.isInitialized()) {
-            if (identityProviderResource == null) {
-                identityProviderResource = (IdentityProviderResource) testContext.getCustomValue("identityProviderResource");
-            }
-            return;
-        }
 
         log.debug("adding identity provider to realm " + bc.consumerRealmName());
         RealmResource realm = adminClient.realm(bc.consumerRealmName());
@@ -426,10 +421,12 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
         RoleRepresentation managerRole = new RoleRepresentation(ROLE_MANAGER,null, false);
         RoleRepresentation friendlyManagerRole = new RoleRepresentation(ROLE_FRIENDLY_MANAGER,null, false);
         RoleRepresentation userRole = new RoleRepresentation(ROLE_USER,null, false);
+        RoleRepresentation userGuideRole = new RoleRepresentation(ROLE_USER_DOT_GUIDE,null, false);
 
         adminClient.realm(realm).roles().create(managerRole);
         adminClient.realm(realm).roles().create(friendlyManagerRole);
         adminClient.realm(realm).roles().create(userRole);
+        adminClient.realm(realm).roles().create(userGuideRole);
     }
 
     protected void createRoleMappersForConsumerRealm() {

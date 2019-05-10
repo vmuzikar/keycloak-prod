@@ -23,6 +23,7 @@ import org.hamcrest.Matchers;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.arquillian.graphene.page.Page;
 import org.junit.After;
+import org.junit.Before;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
@@ -37,6 +38,7 @@ import org.keycloak.testsuite.pages.ErrorPage;
 import org.keycloak.testsuite.pages.IdpConfirmLinkPage;
 import org.keycloak.testsuite.pages.LoginPage;
 import org.keycloak.testsuite.pages.UpdateAccountInformationPage;
+import org.keycloak.testsuite.util.MailServer;
 import org.openqa.selenium.TimeoutException;
 
 import static org.junit.Assert.assertThat;
@@ -82,29 +84,20 @@ public abstract class AbstractBaseBrokerTest extends AbstractKeycloakTest {
 
     @Override
     public void addTestRealms(List<RealmRepresentation> testRealms) {
-        RealmRepresentation providerRealm = bc.createProviderRealm();
-        RealmRepresentation consumerRealm = bc.createConsumerRealm();
-
-        testRealms.add(providerRealm);
-        testRealms.add(consumerRealm);
     }
 
+    @Before
+    public void beforeBrokerTest() {
+        importRealm(bc.createConsumerRealm());
+        importRealm(bc.createProviderRealm());
+    }
 
     @After
     public void cleanupUsers() {
-        RealmResource providerRealm = adminClient.realm(bc.providerRealmName());
-        UserRepresentation userRep = ApiUtil.findUserByUsername(providerRealm, bc.getUserLogin());
-        if (userRep != null) {
-            providerRealm.users().get(userRep.getId()).remove();
-        }
-
-        RealmResource childRealm = adminClient.realm(bc.consumerRealmName());
-        userRep = ApiUtil.findUserByUsername(childRealm, bc.getUserLogin());
-        if (userRep != null) {
-            childRealm.users().get(userRep.getId()).remove();
-        }
+        adminClient.realm(bc.consumerRealmName()).remove();
+        adminClient.realm(bc.providerRealmName()).remove();
+        MailServer.stop();
     }
-
 
     protected void logInAsUserInIDP() {
         driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
