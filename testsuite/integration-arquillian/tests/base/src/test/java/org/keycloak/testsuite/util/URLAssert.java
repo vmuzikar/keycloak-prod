@@ -61,7 +61,7 @@ public class URLAssert {
     }
 
     public static void assertCurrentUrlEquals(final String url) {
-        assertTrue("Expected URL: " + url + "; actual: " + DroneUtils.getCurrentDriver().getCurrentUrl(),
+        assertTrue("Expected URL: " + url + " ; actual: " + DroneUtils.getCurrentDriver().getCurrentUrl(),
                 currentUrlEquals(url));
     }
 
@@ -81,7 +81,7 @@ public class URLAssert {
    }
 
     public static void assertCurrentUrlStartsWith(final String url){
-        assertTrue("URL expected to begin with:" + url + "; actual URL: " + DroneUtils.getCurrentDriver().getCurrentUrl(),
+        assertTrue("URL expected to begin with: " + url + " ; actual URL: " + DroneUtils.getCurrentDriver().getCurrentUrl(),
         currentUrlStartsWith(url));
     }
 
@@ -101,7 +101,7 @@ public class URLAssert {
     }
 
     public static void assertCurrentUrlDoesntStartWith(final String url) {
-        assertTrue("URL expected NOT to begin with:" + url + "; actual URL: " + DroneUtils.getCurrentDriver().getCurrentUrl(),
+        assertTrue("URL expected NOT to begin with: " + url + " ; actual URL: " + DroneUtils.getCurrentDriver().getCurrentUrl(),
                 currentUrlDoesntStartWith(url));
     }
 
@@ -166,7 +166,7 @@ public class URLAssert {
             char [] buf = new char[8192];
             StringWriter out = new StringWriter();
             Reader in = new InputStreamReader(entity.getContent(), Charset.forName("utf-8"));
-            int rc = 0;
+            int rc;
             try {
                 while ((rc = in.read(buf)) != -1) {
                     out.write(buf, 0, rc);
