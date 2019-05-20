@@ -110,6 +110,7 @@ public class EAP6Fuse6HawtioAdapterTest extends AbstractExampleAdapterTest imple
         WaitUtils.waitForPageToLoad();
 
         log.debug("log in");
+        waitUntilUrlStartsWith(testRealmLoginPageFuse.toString(), 60);
         testRealmLoginPageFuse.form().login("root", "password");
         WaitUtils.waitForPageToLoad();
         
