@@ -44,6 +44,7 @@ import org.keycloak.testsuite.arquillian.undertow.TLSUtils;
 
 import io.undertow.server.handlers.proxy.RouteIteratorFactory;
 import io.undertow.server.handlers.proxy.RouteIteratorFactory.ParsingCompatibility;
+import io.undertow.server.handlers.proxy.RouteParsingStrategy;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.StringTokenizer;
@@ -244,7 +245,7 @@ public class SimpleUndertowLoadBalancer {
 
                 if (!stickyHost.isAvailable()) {
                     log.debugf("Sticky host %s not available. Trying different hosts", stickyHost.getUri());
-                    return new RouteIteratorFactory(ParsingCompatibility.MOD_JK, null).iterator(null);
+                    return new RouteIteratorFactory(RouteParsingStrategy.SINGLE, ParsingCompatibility.MOD_JK).iterator(null);
                 } else {
                     log.debugf("Sticky host %s found and looks available", stickyHost.getUri());
                 }
