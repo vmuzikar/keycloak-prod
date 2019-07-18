@@ -1380,4 +1380,12 @@ public class DemoServletsAdapterTest extends AbstractServletsAdapterTest {
                 .clearDetails()
                 .assertEvent(); 
     }
+
+    @Test
+    public void testLoginHintFromClientRequest() {
+        driver.navigate().to(customerPortal + "?login_hint=blah%3d");
+        waitForPageToLoad();
+        assertCurrentUrlStartsWithLoginUrlOf(testRealmPage);
+        assertThat(testRealmLoginPage.form().getUsername(), is("blah="));
+    }
 }
