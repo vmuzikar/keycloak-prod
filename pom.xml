@@ -58,6 +58,9 @@
         <jboss.dmr.version>1.5.0.Final</jboss.dmr.version>
         <bouncycastle.version>1.60</bouncycastle.version>
         <cxf.version>3.2.7</cxf.version>
+        <cxf.jetty.version>3.2.7</cxf.jetty.version>
+        <cxf.jaxrs.version>3.2.7</cxf.jaxrs.version>
+        <cxf.undertow.version>3.2.7</cxf.undertow.version>
         <dom4j.version>2.1.1</dom4j.version>
         <github.relaxng.version>2011.1</github.relaxng.version>
         <h2.version>1.4.193</h2.version>
