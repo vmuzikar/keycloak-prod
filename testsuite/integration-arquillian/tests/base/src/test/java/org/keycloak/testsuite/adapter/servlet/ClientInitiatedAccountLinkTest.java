@@ -43,6 +43,7 @@ import org.keycloak.testsuite.adapter.AbstractServletsAdapterTest;
 import org.keycloak.testsuite.admin.ApiUtil;
 import org.keycloak.testsuite.arquillian.AuthServerTestEnricher;
 import org.keycloak.testsuite.arquillian.annotation.AppServerContainer;
+import org.keycloak.testsuite.util.URLAssert;
 import org.keycloak.testsuite.utils.arquillian.ContainerConstants;
 import org.keycloak.testsuite.broker.BrokerTestTools;
 import org.keycloak.testsuite.page.AbstractPageWithInjectedUrl;
@@ -63,6 +64,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertThat;
 import static org.keycloak.models.AccountRoles.MANAGE_ACCOUNT;
 import static org.keycloak.models.AccountRoles.MANAGE_ACCOUNT_LINKS;
 import static org.keycloak.models.Constants.ACCOUNT_MANAGEMENT_CLIENT_ID;
@@ -206,6 +209,7 @@ public class ClientInitiatedAccountLinkTest extends AbstractServletsAdapterTest 
 
     @Test
     public void testErrorConditions() throws Exception {
+        String helloUrl = appPage.getUriBuilder().clone().path("hello").build().toASCIIString();
 
         RealmResource realm = adminClient.realms().realm(CHILD_IDP);
         List<FederatedIdentityRepresentation> links = realm.users().get(childUserId).getFederatedIdentity();
@@ -239,10 +243,11 @@ public class ClientInitiatedAccountLinkTest extends AbstractServletsAdapterTest 
 
         // now log in
 
-        navigateTo( appPage.getInjectedUrl() + "/hello");
+
+        navigateTo(helloUrl);
         Assert.assertTrue(loginPage.isCurrent(CHILD_IDP));
         loginPage.login("child", "password");
-        Assert.assertTrue(driver.getCurrentUrl().startsWith(appPage.getInjectedUrl() + "/hello"));
+        Assert.assertTrue(driver.getCurrentUrl().startsWith(helloUrl));
         Assert.assertTrue(driver.getPageSource().contains("Unknown request:"));
 
         // now test CSRF with bad hash.
@@ -268,10 +273,10 @@ public class ClientInitiatedAccountLinkTest extends AbstractServletsAdapterTest 
         roles.add(userRole);
         clientResource.getScopeMappings().realmLevel().add(roles);
 
-        navigateTo( appPage.getInjectedUrl() + "/hello");
+        navigateTo(helloUrl);
         Assert.assertTrue(loginPage.isCurrent(CHILD_IDP));
         loginPage.login("child", "password");
-        Assert.assertTrue(driver.getCurrentUrl().startsWith(appPage.getInjectedUrl() + "/hello"));
+        Assert.assertTrue(driver.getCurrentUrl().startsWith(helloUrl));
         Assert.assertTrue(driver.getPageSource().contains("Unknown request:"));
 
 

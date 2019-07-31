@@ -82,7 +82,6 @@ public class URLProvider extends URLResourceProvider {
             try {
                 url = fixLocalhost(url);
                 url = fixBoundToAll(url);
-                url = removeTrailingSlash(url);
                 if (appServerSslRequired) {
                     url = fixSsl(url);
                 }
@@ -151,15 +150,6 @@ public class URLProvider extends URLResourceProvider {
         URL fixedUrl = url;
         String urlString = fixedUrl.toExternalForm().replace("http", "https").replace(System.getProperty("app.server.http.port", "8280"), System.getProperty("app.server.https.port", "8643"));
         return new URL(urlString);
-    }
-
-    public URL removeTrailingSlash(URL url) throws MalformedURLException {
-        URL urlWithoutSlash = url;
-        String urlS = url.toExternalForm();
-        if (urlS.endsWith("/")) {
-            urlWithoutSlash = new URL(urlS.substring(0, urlS.length() - 1));
-        }
-        return urlWithoutSlash;
     }
 
 }

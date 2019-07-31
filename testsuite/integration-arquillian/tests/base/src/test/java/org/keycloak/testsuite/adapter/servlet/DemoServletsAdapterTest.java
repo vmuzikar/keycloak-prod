@@ -18,6 +18,7 @@ package org.keycloak.testsuite.adapter.servlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -335,7 +336,7 @@ public class DemoServletsAdapterTest extends AbstractServletsAdapterTest {
             assertCurrentUrlEquals(customerPortal);
             assertLogged();
             
-            driver.navigate().to(customerPortal.logout());
+            driver.navigate().to(customerPortal.logout().toASCIIString());
             WaitUtils.waitUntilElement(By.id("customer_portal_logout")).is().present();
             customerPortal.navigateTo();
             assertCurrentUrlStartsWithLoginUrlOf(testRealmPage);
@@ -419,7 +420,7 @@ public class DemoServletsAdapterTest extends AbstractServletsAdapterTest {
 
         assertCurrentUrlStartsWithLoginUrlOf(testRealmPage);
         testRealmLoginPage.form().login("bburke@redhat.com", "password");
-        assertCurrentUrlEquals(inputPortal + "/secured/post");
+        assertCurrentUrlEquals(inputPortal.getUriBuilder().clone().path("secured").path("post").build());
         waitForPageToLoad();
         assertPageContains("parameter=hello");
 
@@ -577,7 +578,7 @@ public class DemoServletsAdapterTest extends AbstractServletsAdapterTest {
     @Test
     public void testLoginSSOMax() throws InterruptedException {
         // Delete cookies
-        driver.navigate().to(customerPortal + "/error.html");
+        driver.navigate().to(customerPortal.getUriBuilder().clone().path("error.html").build().toASCIIString());
         driver.manage().deleteAllCookies();
 
         // test login to customer-portal which does a bearer request to customer-db
@@ -838,7 +839,7 @@ public class DemoServletsAdapterTest extends AbstractServletsAdapterTest {
 
 
     @Test
-    public void testVerifyTokenAudience() {
+    public void testVerifyTokenAudience() throws Exception {
         // Generate audience client scope
         String clientScopeId = testingClient.testing().generateAudienceClientScope("demo", "customer-db-audience-required");
 
@@ -846,7 +847,7 @@ public class DemoServletsAdapterTest extends AbstractServletsAdapterTest {
         client.addOptionalClientScope(clientScopeId);
 
         // Login without audience scope. Invoke service should end with failure
-        driver.navigate().to(customerPortal.callCustomerDbAudienceRequiredUrl(false));
+        driver.navigate().to(customerPortal.callCustomerDbAudienceRequiredUrl(false).toURL());
         assertTrue(testRealmLoginPage.form().isUsernamePresent());
         assertCurrentUrlStartsWithLoginUrlOf(testRealmPage);
         testRealmLoginPage.form().login("bburke@redhat.com", "password");
@@ -857,11 +858,11 @@ public class DemoServletsAdapterTest extends AbstractServletsAdapterTest {
         Assert.assertFalse(pageSource.contains("Stian Thorgersen"));
 
         // Logout TODO: will be good to not request logout to force adapter to use additional scope (and other request parameters)
-        driver.navigate().to(customerPortal.logout());
+        driver.navigate().to(customerPortal.logout().toURL());
         waitForPageToLoad();
 
         // Login with requested audience
-        driver.navigate().to(customerPortal.callCustomerDbAudienceRequiredUrl(true));
+        driver.navigate().to(customerPortal.callCustomerDbAudienceRequiredUrl(true).toURL());
         assertTrue(testRealmLoginPage.form().isUsernamePresent());
         assertCurrentUrlStartsWithLoginUrlOf(testRealmPage);
         testRealmLoginPage.form().login("bburke@redhat.com", "password");

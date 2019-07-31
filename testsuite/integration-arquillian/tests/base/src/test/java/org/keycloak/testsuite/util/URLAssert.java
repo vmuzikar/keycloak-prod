@@ -62,11 +62,14 @@ public class URLAssert {
         assertCurrentUrlEquals(page.toString());
     }
 
+    public static void assertCurrentUrlEquals(final URI url) {
+        assertCurrentUrlEquals(url.toASCIIString());
+    }
+
     public static void assertCurrentUrlEquals(final String url) {
         assertTrue("Expected URL: " + url + " ; actual: " + DroneUtils.getCurrentDriver().getCurrentUrl(),
                 currentUrlEquals(url));
     }
-
 
     public static void assertCurrentUrlStartsWith(final AbstractPage page, WebDriver driver) {
         assertCurrentUrlStartsWith(page.toString(), driver);
