@@ -199,6 +199,7 @@ public class SessionResource {
     }
 
     private boolean isCurrentSession(UserSessionModel session) {
+        if (auth.getSession() == null) return false;
         return session.getId().equals(auth.getSession().getId());
     }
 

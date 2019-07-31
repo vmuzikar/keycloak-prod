@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.keycloak.authorization.attribute.Attributes;
 import org.keycloak.authorization.identity.Identity;
 import org.keycloak.authorization.util.Tokens;
+import org.keycloak.common.constants.ServiceAccountConstants;
 import org.keycloak.models.AuthenticatedClientSessionModel;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.ClientSessionContext;
@@ -30,12 +31,19 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.UserSessionModel;
 import org.keycloak.models.UserSessionProvider;
+import org.keycloak.models.utils.KeycloakModelUtils;
+import org.keycloak.protocol.oidc.OIDCLoginProtocol;
 import org.keycloak.protocol.oidc.TokenManager;
 import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.IDToken;
 import org.keycloak.saml.common.util.StringUtil;
 import org.keycloak.services.ErrorResponseException;
+import org.keycloak.services.Urls;
+import org.keycloak.services.managers.AuthenticationManager;
+import org.keycloak.services.managers.AuthenticationSessionManager;
 import org.keycloak.services.util.DefaultClientSessionContext;
+import org.keycloak.sessions.AuthenticationSessionModel;
+import org.keycloak.sessions.RootAuthenticationSessionModel;
 import org.keycloak.util.JsonSerialization;
 
 import javax.ws.rs.core.Response.Status;
@@ -115,17 +123,51 @@ public class KeycloakIdentity implements Identity {
                 this.accessToken = AccessToken.class.cast(token);
             } else {
                 UserSessionProvider sessions = keycloakSession.sessions();
-                UserSessionModel userSession = sessions.getUserSession(realm, token.getSessionState());
+                UserSessionModel userSession = null;
+                if (token.getSessionState() == null) {
+                    // Create temporary (request-scoped) transient session
+                    UserModel user = TokenManager.lookupUserFromStatelessToken(keycloakSession, realm, token);
+                    userSession = sessions.createUserSession(KeycloakModelUtils.generateId(), realm, user, user.getUsername(), keycloakSession.getContext().getConnection().getRemoteAddr(),
+                            ServiceAccountConstants.CLIENT_AUTH, false, null, null, UserSessionModel.SessionPersistenceState.TRANSIENT);
+                } else {
+                    userSession = sessions.getUserSession(realm, token.getSessionState());
 
-                if (userSession == null) {
-                    userSession = sessions.getOfflineUserSession(realm, token.getSessionState());
+                    if (userSession == null) {
+                        userSession = sessions.getOfflineUserSession(realm, token.getSessionState());
+                    }
                 }
 
                 ClientModel client = realm.getClientByClientId(token.getIssuedFor());
-                AuthenticatedClientSessionModel clientSessionModel = userSession.getAuthenticatedClientSessions().get(client.getId());
+                AuthenticatedClientSessionModel clientSession = userSession.getAuthenticatedClientSessionByClient(client.getId());
+                ClientSessionContext clientSessionCtx;
 
-                ClientSessionContext clientSessionCtx = DefaultClientSessionContext.fromClientSessionScopeParameter(clientSessionModel, keycloakSession);
+                if (clientSession == null) {
+                    RootAuthenticationSessionModel rootAuthSession = keycloakSession.authenticationSessions().getRootAuthenticationSession(realm, userSession.getId());
+
+                    if (rootAuthSession == null) {
+                        if (userSession.getUser().getServiceAccountClientLink() == null) {
+                            rootAuthSession = keycloakSession.authenticationSessions().createRootAuthenticationSession(userSession.getId(), realm);
+                        } else {
+                            // if the user session is associated with a service account
+                            rootAuthSession = new AuthenticationSessionManager(keycloakSession).createAuthenticationSession(realm, false);
+                        }
+                    }
+
+                    AuthenticationSessionModel authSession = rootAuthSession.createAuthenticationSession(client);
+
+                    authSession.setAuthenticatedUser(userSession.getUser());
+                    authSession.setProtocol(OIDCLoginProtocol.LOGIN_PROTOCOL);
+                    authSession.setClientNote(OIDCLoginProtocol.ISSUER, Urls.realmIssuer(keycloakSession.getContext().getUri().getBaseUri(), realm.getName()));
+
+                    AuthenticationManager.setClientScopesInSession(authSession);
+                    clientSessionCtx = TokenManager.attachAuthenticationSession(keycloakSession, userSession, authSession);
+                } else {
+                    clientSessionCtx = DefaultClientSessionContext.fromClientSessionScopeParameter(clientSession, keycloakSession);
+                }
                 this.accessToken = new TokenManager().createClientAccessToken(keycloakSession, realm, client, userSession.getUser(), userSession, clientSessionCtx);
+                if (token.getSessionState() == null) {
+                    this.accessToken.setSessionState(null);
+                }
             }
 
             AccessToken.Access realmAccess = this.accessToken.getRealmAccess();
@@ -147,7 +189,7 @@ public class KeycloakIdentity implements Identity {
                 clientUser = this.keycloakSession.users().getServiceAccount(clientModel);
             }
 
-            UserModel userSession = getUserFromSessionState();
+            UserModel userSession = getUserFromToken();
 
             this.resourceServer = clientUser != null && userSession.getId().equals(clientUser.getId());
 
@@ -225,7 +267,7 @@ public class KeycloakIdentity implements Identity {
                 clientUser = this.keycloakSession.users().getServiceAccount(clientModel);
             }
 
-            UserModel userSession = getUserFromSessionState();
+            UserModel userSession = getUserFromToken();
 
             this.resourceServer = clientUser != null && userSession.getId().equals(clientUser.getId());
 
@@ -272,7 +314,11 @@ public class KeycloakIdentity implements Identity {
         return null;
     }
 
-    private UserModel getUserFromSessionState() {
+    private UserModel getUserFromToken() {
+        if (accessToken.getSessionState() == null) {
+            return TokenManager.lookupUserFromStatelessToken(keycloakSession, realm, accessToken);
+        }
+
         UserSessionProvider sessions = keycloakSession.sessions();
         UserSessionModel userSession = sessions.getUserSession(realm, accessToken.getSessionState());
 

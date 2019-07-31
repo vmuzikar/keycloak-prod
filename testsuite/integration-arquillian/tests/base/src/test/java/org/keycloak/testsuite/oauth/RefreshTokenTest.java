@@ -35,6 +35,7 @@ import org.keycloak.jose.jws.JWSInput;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.utils.SessionTimeoutHelper;
+import org.keycloak.protocol.oidc.OIDCConfigAttributes;
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
 import org.keycloak.protocol.oidc.OIDCLoginProtocolService;
 import org.keycloak.representations.AccessToken;
@@ -116,6 +117,7 @@ public class RefreshTokenTest extends AbstractKeycloakTest {
         realmRepresentation.getClients().add(org.keycloak.testsuite.util.ClientBuilder.create()
                 .clientId("service-account-app")
                 .serviceAccount()
+                .attribute(OIDCConfigAttributes.USE_REFRESH_TOKEN_FOR_CLIENT_CREDENTIALS_GRANT, "true")
                 .secret("secret")
                 .build());
 
