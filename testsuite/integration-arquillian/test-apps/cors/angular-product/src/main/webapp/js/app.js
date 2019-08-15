@@ -18,7 +18,7 @@
 var module = angular.module('product', []);
 
 function getAuthServerUrl() {
-    var url = 'https://localhost-auth:8543';
+    var url = 'https://localhost-auth-127.0.0.1.nip.io:8543';
 
     return url;
 }
@@ -67,9 +67,8 @@ module.controller('GlobalCtrl', function($scope, $http) {
     $scope.roles = [];
     $scope.serverInfo = [];
     $scope.realm = [];
-    $scope.version = [];
     $scope.reloadData = function() {
-        $http.get(getAppServerUrl("localhost-db") + "/cors-database/products").success(function(data, status, headers, config) {
+        $http.get(getAppServerUrl("localhost-db-127.0.0.1.nip.io") + "/cors-database/products").success(function(data, status, headers, config) {
             $scope.products = angular.fromJson(data);
             $scope.headers = headers();
         });
@@ -105,12 +104,6 @@ module.controller('GlobalCtrl', function($scope, $http) {
     $scope.loadPublicRealmInfo = function() {
         $http.get(getAuthServerUrl() + "/auth/realms/cors").success(function(data) {
             $scope.realm = angular.fromJson(data);
-        });
-    };
-
-    $scope.loadVersion = function() {
-        $http.get(getAppServerUrl("localhost-db") + "/cors-database/products/k_version").success(function(data) {
-            $scope.version = angular.fromJson(data);
         });
     };
 
