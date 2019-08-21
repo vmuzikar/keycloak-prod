@@ -33,6 +33,7 @@ import org.keycloak.admin.client.resource.AuthenticationManagementResource;
 import org.keycloak.admin.client.resource.RealmsResource;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.common.Profile;
 import org.keycloak.common.util.KeycloakUriBuilder;
 import org.keycloak.common.util.Time;
 import org.keycloak.representations.idm.ClientRepresentation;
@@ -72,6 +73,7 @@ import org.wildfly.extras.creaper.core.online.operations.Operations;
 import org.wildfly.extras.creaper.core.online.operations.admin.Administration;
 
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import java.io.ByteArrayInputStream;
@@ -96,6 +98,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.keycloak.testsuite.admin.Users.setPasswordFor;
 import static org.keycloak.testsuite.auth.page.AuthRealm.ADMIN;
@@ -159,6 +162,7 @@ public abstract class AbstractKeycloakTest {
     private PropertiesConfiguration constantsProperties;
 
     private boolean resetTimeOffset;
+    private List<Profile.Feature> enabledFeatures = new ArrayList<>();
 
     @Before
     public void beforeAbstractKeycloakTest() throws Exception {
@@ -242,6 +246,10 @@ public abstract class AbstractKeycloakTest {
                 }
             }
             testContext.getCleanups().clear();
+        }
+
+        for (Profile.Feature feature : enabledFeatures) {
+            disableFeature(feature);
         }
 
         postAfterAbstractKeycloak();
@@ -626,5 +634,18 @@ public abstract class AbstractKeycloakTest {
             }
         }
         return in;
+    }
+
+    protected void enableFeature(Profile.Feature feature) {
+        enabledFeatures.add(feature);
+        try (Response response = getTestingClient().testing().enableFeature(feature.toString())) {
+            assertEquals(200, response.getStatus());
+        }
+    }
+
+    protected void disableFeature(Profile.Feature feature) {
+        try (Response response = getTestingClient().testing().disableFeature(feature.toString())) {
+            assertEquals(200, response.getStatus());
+        }
     }
 }

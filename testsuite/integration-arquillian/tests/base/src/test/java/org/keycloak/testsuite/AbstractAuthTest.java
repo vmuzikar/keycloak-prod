@@ -20,6 +20,7 @@ import org.jboss.arquillian.graphene.page.Page;
 import org.junit.Before;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UserResource;
+import org.keycloak.common.Profile;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.testsuite.admin.ApiUtil;
@@ -33,11 +34,14 @@ import org.openqa.selenium.Cookie;
 import java.text.MessageFormat;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.keycloak.representations.idm.CredentialRepresentation.PASSWORD;
 import static org.keycloak.testsuite.admin.ApiUtil.assignClientRoles;
 import static org.keycloak.testsuite.admin.ApiUtil.createUserAndResetPasswordWithAdminClient;
 import static org.keycloak.testsuite.admin.Users.setPasswordFor;
 import static org.keycloak.testsuite.auth.page.AuthRealm.TEST;
+
+import javax.ws.rs.core.Response;
 
 /**
  *
@@ -156,5 +160,4 @@ public abstract class AbstractAuthTest extends AbstractKeycloakTest {
     protected UserResource testUserResource() {
         return testRealmResource().users().get(testUser.getId());
     }
-
 }

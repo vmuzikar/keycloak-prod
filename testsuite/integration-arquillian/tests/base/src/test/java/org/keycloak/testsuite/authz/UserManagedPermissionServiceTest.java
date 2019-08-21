@@ -93,8 +93,7 @@ public class UserManagedPermissionServiceTest extends AbstractResourceServerTest
                 .build());
     }
 
-    @Test
-    public void testCreate() {
+    private void testCreate() {
         ResourceRepresentation resource = new ResourceRepresentation();
 
         resource.setName("Resource A");
@@ -145,7 +144,12 @@ public class UserManagedPermissionServiceTest extends AbstractResourceServerTest
     }
 
     @Test
-    public void testUpdate() {
+    public void testCreateDeprecatedFeaturesDisabled() {
+        ProfileAssume.assumeFeatureDisabled(Profile.Feature.UPLOAD_SCRIPTS);
+        testCreate();
+    }
+
+    private void testUpdate() {
         ResourceRepresentation resource = new ResourceRepresentation();
 
         resource.setName("Resource A");
@@ -333,10 +337,16 @@ public class UserManagedPermissionServiceTest extends AbstractResourceServerTest
         ProfileAssume.assumeFeatureEnabled(Profile.Feature.UPLOAD_SCRIPTS);
         testUpdate();
     }
+
+    @Test
+    public void testUpdateDeprecatedFeaturesDisabled() {
+        ProfileAssume.assumeFeatureDisabled(Profile.Feature.UPLOAD_SCRIPTS);
+        testUpdate();
+    }
     
     @Test
     public void testUploadScriptDisabled() {
-        ProfileAssume.assumeFeatureDisabled(Profile.Feature.UPLOAD_SCRIPTS);
+        disableFeature(Profile.Feature.UPLOAD_SCRIPTS);
         ResourceRepresentation resource = new ResourceRepresentation();
 
         resource.setName("Resource A");
