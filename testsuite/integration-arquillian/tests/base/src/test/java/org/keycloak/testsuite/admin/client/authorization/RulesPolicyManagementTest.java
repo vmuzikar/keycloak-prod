@@ -23,6 +23,7 @@ import java.util.Collections;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
+import org.junit.BeforeClass;
 
 import org.junit.Test;
 import org.keycloak.admin.client.resource.AuthorizationResource;
@@ -33,11 +34,19 @@ import org.keycloak.representations.idm.authorization.DecisionStrategy;
 import org.keycloak.representations.idm.authorization.Logic;
 import org.keycloak.representations.idm.authorization.RulePolicyRepresentation;
 import org.keycloak.testsuite.ProfileAssume;
+import org.keycloak.testsuite.util.ContainerAssume;
 
 /**
  * @author <a href="mailto:psilva@redhat.com">Pedro Igor</a>
  */
 public class RulesPolicyManagementTest extends AbstractPolicyManagementTest {
+
+    @BeforeClass
+    public static void verifyEnvironment() {
+        ContainerAssume.assumeNotAuthServerUndertow();
+        ProfileAssume.assumeFeatureEnabled(Profile.Feature.AUTHZ_DROOLS_POLICY);
+        ContainerAssume.assumeNotAuthServerRemote();
+    }
 
     @Test
     public void testCreate() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Red Hat, Inc. and/or its affiliates
+ * Copyright 2019 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,23 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.keycloak.testsuite.arquillian.remote;
 
-package org.keycloak.testsuite.arquillian.annotation;
+import org.jboss.arquillian.container.test.spi.client.deployment.ApplicationArchiveProcessor;
+import org.jboss.arquillian.core.spi.LoadableExtension;
+import org.keycloak.testsuite.arquillian.remote.container.RemoteDeploymentArchiveProcessor;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+public class RemoteAppServerArquillianExtension implements LoadableExtension {
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+    @Override
+    public void register(ExtensionBuilder builder) {
+        builder.service(ApplicationArchiveProcessor.class, RemoteDeploymentArchiveProcessor.class);
+    }
 
-/**
- * Holder for @AppServerContainer annotations
- * 
- */
-@Documented
-@Retention(RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
-public @interface AppServerContainers {
-    AppServerContainer[] value();
 }

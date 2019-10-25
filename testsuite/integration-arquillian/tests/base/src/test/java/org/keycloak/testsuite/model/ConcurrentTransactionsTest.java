@@ -34,6 +34,9 @@ import org.keycloak.testsuite.runonserver.RunOnServerDeployment;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
 import static org.keycloak.testsuite.arquillian.DeploymentTargetModifier.AUTH_SERVER_CURRENT;
 
@@ -263,7 +266,8 @@ public class ConcurrentTransactionsTest extends AbstractTestRealmKeycloakTest {
             um.removeUser(realm, realmUser2);
         }
 
-        assert (currentSession.realms().removeRealm(realm.getId()));
+        Assert.assertTrue(currentSession.realms().removeRealm(realm.getId()));
+        Assert.assertThat(currentSession.realms().getRealm(realm.getId()), is(nullValue()));
     }
 
     @Override
