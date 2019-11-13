@@ -52,6 +52,8 @@ import static org.keycloak.authentication.authenticators.browser.ConditionalOtpF
 import static org.keycloak.models.UserModel.RequiredAction.CONFIGURE_TOTP;
 import static org.keycloak.representations.idm.CredentialRepresentation.PASSWORD;
 import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.AUTH_SERVER_PORT;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import static org.keycloak.testsuite.util.URLAssert.assertCurrentUrlStartsWith;
 
 public class CustomAuthFlowOTPTest extends AbstractCustomAccountManagementTest {
@@ -119,6 +121,7 @@ public class CustomAuthFlowOTPTest extends AbstractCustomAccountManagementTest {
     }
 
     @Test
+    @AuthServerContainerExclude(AuthServer.REMOTE)
     public void conditionalOTPNoDefault() {
         configureRequiredActions();
         configureOTP();
@@ -170,6 +173,7 @@ public class CustomAuthFlowOTPTest extends AbstractCustomAccountManagementTest {
     }
     
     @Test
+    @AuthServerContainerExclude(AuthServer.REMOTE)
     public void conditionalOTPNoDefaultWithChecks() {
         configureRequiredActions();
         configureOTP();
@@ -346,6 +350,7 @@ public class CustomAuthFlowOTPTest extends AbstractCustomAccountManagementTest {
     }
 
     @Test
+    @AuthServerContainerExclude(AuthServer.REMOTE)
     public void conditionalOTPRequestHeaderSkip() {
         //prepare config - request header skip, default to force
         Map<String, String> config = new HashMap<>();
@@ -362,6 +367,7 @@ public class CustomAuthFlowOTPTest extends AbstractCustomAccountManagementTest {
     }
 
     @Test
+    @AuthServerContainerExclude(AuthServer.REMOTE)
     public void conditionalOTPRequestHeaderForce() {
         //prepare config - equest header force, default to skip
         Map<String, String> config = new HashMap<>();

@@ -16,6 +16,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 import static org.keycloak.testsuite.broker.BrokerTestConstants.*;
 import static org.keycloak.testsuite.broker.BrokerTestTools.*;
@@ -24,6 +26,7 @@ import static org.keycloak.testsuite.broker.BrokerTestTools.*;
  *
  * @author hmlnarik
  */
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class KcOidcBrokerConfiguration implements BrokerConfiguration {
 
     public static final KcOidcBrokerConfiguration INSTANCE = new KcOidcBrokerConfiguration();

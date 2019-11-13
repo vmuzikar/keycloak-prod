@@ -53,10 +53,13 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.getAuthServerContextRoot;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import static org.keycloak.testsuite.broker.BrokerTestConstants.*;
 import static org.keycloak.testsuite.util.Matchers.bodyHC;
 import static org.keycloak.testsuite.util.Matchers.isSamlResponse;
 
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class KcSamlSignedBrokerTest extends KcSamlBrokerTest {
 
     private static final String PRIVATE_KEY = "MIIBVQIBADANBgkqhkiG9w0BAQEFAASCAT8wggE7AgEAAkEAs46ICYPRIkmr8diECmyT59cChTWIEiXYBY3T6OLlZrF8ofVCzbEeoUOmhrtHijxxuKSoqLWP4nNOt3rINtQNBQIDAQABAkBL2nyxuFQTLhhLdPJjDPd2y6gu6ixvrjkSL5ZEHgZXWRHzhTzBT0eRxg/5rJA2NDRMBzTTegaEGkWUt7lF5wDJAiEA5pC+h9NEgqDJSw42I52BOml3II35Z6NlNwl6OMfnD1sCIQDHXUiOIJy4ZcSgv5WGue1KbdNVOT2gop1XzfuyWgtjHwIhAOCjLb9QC3PqC7Tgx8azcnDiyHojWVesTrTsuvQPcAP5AiAkX5OeQrr1NbQTNAEe7IsrmjAFi4T/6stUOsOiPaV4NwIhAJIeyh4foIXIVQ+M4To2koaDFRssxKI9/O72vnZSJ+uA";

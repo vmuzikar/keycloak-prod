@@ -5,8 +5,10 @@ import org.keycloak.representations.idm.IdentityProviderMapperRepresentation;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
-
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class OidcUserAttributeMapperTest extends AbstractUserAttributeMapperTest {
 
     @Override

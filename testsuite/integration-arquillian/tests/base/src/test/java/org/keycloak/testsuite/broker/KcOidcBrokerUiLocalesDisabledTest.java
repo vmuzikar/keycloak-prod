@@ -13,11 +13,14 @@ import static java.util.Locale.ENGLISH;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.keycloak.OAuth2Constants.UI_LOCALES_PARAM;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import static org.keycloak.testsuite.broker.BrokerTestConstants.IDP_OIDC_ALIAS;
 import static org.keycloak.testsuite.broker.BrokerTestConstants.IDP_OIDC_PROVIDER_ID;
 import static org.keycloak.testsuite.broker.BrokerTestTools.createIdentityProvider;
 import static org.keycloak.testsuite.broker.BrokerTestTools.waitForPage;
 
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class KcOidcBrokerUiLocalesDisabledTest extends KcOidcBrokerTest {
 
     @Override

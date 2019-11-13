@@ -16,8 +16,10 @@
  */
 package org.keycloak.testsuite.oauth;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.keycloak.OAuth2Constants;
@@ -55,6 +57,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import java.net.URI;
+import java.security.Security;
 import java.util.List;
 
 import static org.hamcrest.Matchers.allOf;
@@ -81,6 +84,11 @@ public class RefreshTokenTest extends AbstractKeycloakTest {
     @Override
     public void beforeAbstractKeycloakTest() throws Exception {
         super.beforeAbstractKeycloakTest();
+    }
+
+    @BeforeClass
+    public static void addBouncyCastleProvider() {
+        if (Security.getProvider("BC") == null) Security.addProvider(new BouncyCastleProvider());
     }
 
     @Before

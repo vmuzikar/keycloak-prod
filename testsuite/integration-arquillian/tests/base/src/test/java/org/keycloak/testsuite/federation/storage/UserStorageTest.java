@@ -52,6 +52,7 @@ import static org.keycloak.storage.UserStorageProviderModel.EVICTION_MINUTE;
 import static org.keycloak.storage.UserStorageProviderModel.MAX_LIFESPAN;
 import org.keycloak.testsuite.AbstractAuthTest;
 import org.keycloak.testsuite.admin.ApiUtil;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.arquillian.annotation.ModelTest;
 import org.keycloak.testsuite.federation.UserMapStorage;
 import org.keycloak.testsuite.federation.UserMapStorageFactory;
@@ -70,6 +71,7 @@ import org.keycloak.testsuite.util.TestCleanup;
 
 import static org.keycloak.storage.UserStorageProviderModel.IMPORT_ENABLED;
 import static org.keycloak.testsuite.actions.RequiredActionEmailVerificationTest.getPasswordResetEmailLink;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import static org.keycloak.testsuite.util.URLAssert.assertCurrentUrlDoesntStartWith;
 import static org.keycloak.testsuite.util.URLAssert.assertCurrentUrlStartsWith;
 
@@ -77,6 +79,7 @@ import static org.keycloak.testsuite.util.URLAssert.assertCurrentUrlStartsWith;
  *
  * @author tkyjovsk
  */
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class UserStorageTest extends AbstractAuthTest {
 
     private String memProviderId;
@@ -314,6 +317,7 @@ public class UserStorageTest extends AbstractAuthTest {
     }
 
     @Test
+    @AuthServerContainerExclude(AuthServer.REMOTE)
     public void testRegisterWithRequiredEmail() throws Exception {
         try (AutoCloseable c = new RealmAttributeUpdater(testRealmResource())
           .updateWith(r -> {

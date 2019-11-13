@@ -35,11 +35,14 @@ import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.services.managers.AuthenticationManager;
 
 import org.keycloak.testsuite.AbstractTestRealmKeycloakTest;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.arquillian.annotation.ModelTest;
 import org.keycloak.testsuite.runonserver.RunOnServerDeployment;
 
 import static org.keycloak.testsuite.arquillian.DeploymentTargetModifier.AUTH_SERVER_CURRENT;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class SessionTimeoutValidationTest extends AbstractTestRealmKeycloakTest {
 
     @Deployment

@@ -48,6 +48,7 @@ import org.keycloak.testsuite.Assert;
 import org.keycloak.testsuite.AssertEvents;
 import org.keycloak.testsuite.ProfileAssume;
 import org.keycloak.testsuite.admin.ApiUtil;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.util.ClientManager;
 import org.keycloak.testsuite.util.OAuthClient;
 import org.keycloak.testsuite.util.ProtocolMapperUtil;
@@ -76,6 +77,7 @@ import static org.keycloak.testsuite.admin.AbstractAdminTest.loadJson;
 import static org.keycloak.testsuite.admin.ApiUtil.findClientByClientId;
 import static org.keycloak.testsuite.admin.ApiUtil.findClientResourceByClientId;
 import static org.keycloak.testsuite.admin.ApiUtil.findUserByUsernameId;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import static org.keycloak.testsuite.util.ProtocolMapperUtil.createAddressMapper;
 import static org.keycloak.testsuite.util.ProtocolMapperUtil.createClaimMapper;
 import static org.keycloak.testsuite.util.ProtocolMapperUtil.createHardcodedClaim;
@@ -150,6 +152,7 @@ public class OIDCProtocolMappersTest extends AbstractKeycloakTest {
     }
 
     @Test
+    @AuthServerContainerExclude(AuthServer.REMOTE)
     public void testTokenMapping() throws Exception {
         {
             UserResource userResource = findUserByUsernameId(adminClient.realm("test"), "test-user@localhost");
@@ -299,6 +302,7 @@ public class OIDCProtocolMappersTest extends AbstractKeycloakTest {
     }
 
     @Test
+    @AuthServerContainerExclude(AuthServer.REMOTE)
     public void testNullOrEmptyTokenMapping() throws Exception {
         {
             UserResource userResource = findUserByUsernameId(adminClient.realm("test"), "test-user@localhost");
@@ -356,6 +360,7 @@ public class OIDCProtocolMappersTest extends AbstractKeycloakTest {
 
 
     @Test
+    @AuthServerContainerExclude(AuthServer.REMOTE)
     public void testUserRoleToAttributeMappers() throws Exception {
         // Add mapper for realm roles
         ProtocolMapperRepresentation realmMapper = ProtocolMapperUtil.createUserRealmRoleMappingMapper("pref.", "Realm roles mapper", "roles-custom.realm", true, true);
@@ -388,6 +393,7 @@ public class OIDCProtocolMappersTest extends AbstractKeycloakTest {
 
     // Test to update protocolMappers to not have roles on the default position (realm_access and resource_access properties)
     @Test
+    @AuthServerContainerExclude(AuthServer.REMOTE)
     public void testUserRolesMovedFromAccessTokenProperties() throws Exception {
         RealmResource realm = adminClient.realm("test");
         ClientScopeResource rolesScope = ApiUtil.findClientScopeByName(realm, OIDCLoginProtocolFactory.ROLES_SCOPE);
@@ -609,6 +615,7 @@ public class OIDCProtocolMappersTest extends AbstractKeycloakTest {
 
 
     @Test
+    @AuthServerContainerExclude(AuthServer.REMOTE)
     public void testUserGroupRoleToAttributeMappers() throws Exception {
         // Add mapper for realm roles
         String clientId = "test-app";

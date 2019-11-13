@@ -38,10 +38,13 @@ import java.util.function.BiConsumer;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.hamcrest.Matchers;
 import static org.junit.Assert.*;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 /**
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
  */
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class ComponentsTest extends AbstractAdminTest {
 
     private ComponentsResource components;

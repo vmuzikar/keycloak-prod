@@ -19,7 +19,6 @@ package org.keycloak.testsuite.authz;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.authorization.AuthorizationProvider;
@@ -42,13 +41,13 @@ import org.keycloak.representations.idm.authorization.PolicyEvaluationRequest;
 import org.keycloak.representations.idm.authorization.PolicyEvaluationResponse;
 import org.keycloak.representations.idm.authorization.PolicyRepresentation;
 import org.keycloak.representations.idm.authorization.ScopePermissionRepresentation;
-import org.keycloak.testsuite.AbstractKeycloakTest;
-import org.keycloak.testsuite.ProfileAssume;
 import org.keycloak.testsuite.runonserver.RunOnServerDeployment;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 import static org.keycloak.testsuite.auth.page.AuthRealm.TEST;
 
@@ -56,6 +55,7 @@ import static org.keycloak.testsuite.auth.page.AuthRealm.TEST;
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class PolicyEvaluationCompositeRoleTest extends AbstractAuthzTest {
 
     @Override

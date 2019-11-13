@@ -11,9 +11,12 @@ import java.util.List;
 
 import static org.keycloak.testsuite.admin.ApiUtil.createUserWithAdminClient;
 import static org.keycloak.testsuite.admin.ApiUtil.resetUserPassword;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import static org.keycloak.testsuite.broker.BrokerTestConstants.REALM_PROV_NAME;
 import static org.keycloak.testsuite.broker.BrokerTestTools.waitForPage;
 
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class KcOidcBrokerLogoutTest extends AbstractBaseBrokerTest {
     @Override
     protected BrokerConfiguration getBrokerConfiguration() {

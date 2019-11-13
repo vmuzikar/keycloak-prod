@@ -37,6 +37,7 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.RoleModel;
 import org.keycloak.services.managers.RealmManager;
 import org.keycloak.testsuite.AbstractAuthTest;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.runonserver.RunOnServerDeployment;
 
 import java.io.File;
@@ -45,10 +46,13 @@ import java.util.List;
 
 import javax.ws.rs.NotFoundException;
 
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
+
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class FederatedStorageExportImportTest extends AbstractAuthTest {
 
     private static final String REALM_NAME = "exported";

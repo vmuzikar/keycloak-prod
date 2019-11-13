@@ -107,7 +107,7 @@ import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.AUTH_SERV
 import static org.keycloak.testsuite.auth.page.AuthRealm.ADMIN;
 import static org.keycloak.testsuite.auth.page.AuthRealm.MASTER;
 import static org.keycloak.testsuite.util.URLUtils.navigateToUri;
-import static org.keycloak.testsuite.util.URLUtils.removePort80;
+import static org.keycloak.testsuite.util.URLUtils.removeDefaultPorts;
 
 /**
  *
@@ -376,13 +376,13 @@ public abstract class AbstractKeycloakTest {
     }
 
     public void fixAuthServerHostAndPortForClientRepresentation(ClientRepresentation cr) {
-        cr.setBaseUrl(removePort80(replaceAuthHostWithRealHost(cr.getBaseUrl())));
-        cr.setAdminUrl(removePort80(replaceAuthHostWithRealHost(cr.getAdminUrl())));
+        cr.setBaseUrl(removeDefaultPorts(replaceAuthHostWithRealHost(cr.getBaseUrl())));
+        cr.setAdminUrl(removeDefaultPorts(replaceAuthHostWithRealHost(cr.getAdminUrl())));
 
         if (cr.getRedirectUris() != null && !cr.getRedirectUris().isEmpty()) {
             List<String> fixedUrls = new ArrayList<>(cr.getRedirectUris().size());
             for (String url : cr.getRedirectUris()) {
-                fixedUrls.add(removePort80(replaceAuthHostWithRealHost(url)));
+                fixedUrls.add(removeDefaultPorts(replaceAuthHostWithRealHost(url)));
             }
 
             cr.setRedirectUris(fixedUrls);

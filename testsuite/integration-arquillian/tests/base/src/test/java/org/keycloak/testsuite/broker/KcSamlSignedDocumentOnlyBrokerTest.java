@@ -8,9 +8,12 @@ import org.keycloak.testsuite.arquillian.SuiteContext;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 import static org.keycloak.testsuite.broker.BrokerTestConstants.*;
 
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class KcSamlSignedDocumentOnlyBrokerTest extends KcSamlBrokerTest {
 
     public static class KcSamlSignedBrokerConfiguration extends KcSamlBrokerConfiguration {

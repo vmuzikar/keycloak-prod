@@ -47,10 +47,13 @@ import org.keycloak.services.messages.Messages;
 import static org.keycloak.common.Profile.Feature.ACCOUNT_API;
 import org.keycloak.services.resources.account.AccountCredentialResource.PasswordUpdate;
 import static org.keycloak.testsuite.ProfileAssume.assumeFeatureEnabled;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 /**
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
  */
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class AccountRestServiceTest extends AbstractTestRealmKeycloakTest {
 
     @Rule

@@ -3,7 +3,6 @@ package org.keycloak.testsuite.openshift;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.keycloak.OAuth2Constants;
@@ -30,7 +29,7 @@ import org.keycloak.testsuite.AbstractTestRealmKeycloakTest;
 import org.keycloak.testsuite.AssertEvents;
 import org.keycloak.testsuite.admin.ApiUtil;
 import org.keycloak.testsuite.arquillian.AuthServerTestEnricher;
-import org.keycloak.testsuite.util.ContainerAssume;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.util.OAuthClient;
 import org.keycloak.testsuite.util.UserBuilder;
 
@@ -45,7 +44,9 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.junit.Assert.*;
 import static org.keycloak.common.Profile.Feature.OPENSHIFT_INTEGRATION;
 import static org.keycloak.testsuite.ProfileAssume.assumeFeatureEnabled;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class OpenShiftTokenReviewEndpointTest extends AbstractTestRealmKeycloakTest {
 
     private static boolean flowConfigured;
@@ -75,11 +76,6 @@ public class OpenShiftTokenReviewEndpointTest extends AbstractTestRealmKeycloakT
         client.setClientAuthenticatorType("testsuite-client-dummy");
 
         testRealm.getUsers().add(UserBuilder.create().username("groups-user").password("password").addGroups("/topGroup", "/topGroup/level2group").build());
-    }
-
-    @BeforeClass
-    public static void enabled() {
-        ContainerAssume.assumeNotAuthServerRemote();
     }
 
     @Before

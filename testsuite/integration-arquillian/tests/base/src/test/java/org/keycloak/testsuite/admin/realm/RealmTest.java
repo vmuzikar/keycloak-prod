@@ -26,8 +26,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.resource.RealmResource;
-import org.keycloak.admin.client.resource.ServerInfoResource;
 import org.keycloak.common.util.Time;
 import org.keycloak.events.admin.OperationType;
 import org.keycloak.events.admin.ResourceType;
@@ -64,7 +62,6 @@ import org.keycloak.util.JsonSerialization;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -79,11 +76,14 @@ import static org.junit.Assert.*;
 import org.keycloak.events.EventType;
 import org.keycloak.events.log.JBossLoggingEventListenerProviderFactory;
 import org.keycloak.representations.idm.RealmEventsConfigRepresentation;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import org.keycloak.testsuite.events.EventsListenerProviderFactory;
 
 /**
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
  */
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class RealmTest extends AbstractAdminTest {
 
     @Deployment

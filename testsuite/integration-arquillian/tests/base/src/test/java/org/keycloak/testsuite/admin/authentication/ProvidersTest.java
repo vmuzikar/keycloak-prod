@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 /**
  * @author <a href="mailto:mstrukel@redhat.com">Marko Strukelj</a>
@@ -52,6 +54,7 @@ public class ProvidersTest extends AbstractAuthenticationTest {
     }
 
     @Test
+    @AuthServerContainerExclude(AuthServer.REMOTE)
     public void testFormActionProviders() {
         List<Map<String, Object>> result = authMgmtResource.getFormActionProviders();
 
@@ -71,6 +74,7 @@ public class ProvidersTest extends AbstractAuthenticationTest {
     }
 
     @Test
+    @AuthServerContainerExclude(AuthServer.REMOTE)
     public void testClientAuthenticatorProviders() {
         List<Map<String, Object>> result = authMgmtResource.getClientAuthenticatorProviders();
 

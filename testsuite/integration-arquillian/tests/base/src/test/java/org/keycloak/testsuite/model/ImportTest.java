@@ -21,7 +21,6 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.TargetsContainer;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Assert;
-import org.junit.ClassRule;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -36,14 +35,14 @@ import org.keycloak.protocol.oidc.mappers.UserSessionNoteMapper;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.models.Constants;
 import org.keycloak.testsuite.AbstractTestRealmKeycloakTest;
-import org.keycloak.testsuite.federation.ldap.AbstractLDAPTest;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.runonserver.RunOnServerDeployment;
-import org.keycloak.testsuite.util.LDAPRule;
 
 import static org.keycloak.testsuite.admin.AbstractAdminTest.loadJson;
 import static org.keycloak.testsuite.arquillian.DeploymentTargetModifier.AUTH_SERVER_CURRENT;
 
 import java.util.List;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 
 /**
@@ -51,6 +50,7 @@ import java.util.List;
  * @version $Revision: 1 $
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class ImportTest extends AbstractTestRealmKeycloakTest {
 
 

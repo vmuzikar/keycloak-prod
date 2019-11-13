@@ -12,9 +12,12 @@ import org.keycloak.testsuite.arquillian.SuiteContext;
 
 import java.util.List;
 import java.util.Map;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 import static org.keycloak.testsuite.broker.BrokerTestTools.waitForPage;
 
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class KcOidcBrokerPromptParameterTest extends AbstractBrokerTest {
 
     private static final String PROMPT_CONSENT = "consent";

@@ -26,10 +26,12 @@ import java.util.List;
 import java.util.Map;
 
 import static org.keycloak.broker.saml.SAMLIdentityProviderConfig.*;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import static org.keycloak.testsuite.broker.BrokerTestConstants.*;
 import static org.keycloak.testsuite.broker.BrokerTestTools.*;
 
-
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class KcSamlBrokerConfiguration implements BrokerConfiguration {
 
     public static final KcSamlBrokerConfiguration INSTANCE = new KcSamlBrokerConfiguration();

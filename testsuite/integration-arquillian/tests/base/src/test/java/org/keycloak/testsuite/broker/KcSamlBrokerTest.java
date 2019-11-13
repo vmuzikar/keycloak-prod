@@ -33,10 +33,13 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.getAuthServerContextRoot;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import static org.keycloak.testsuite.broker.AbstractBrokerTest.ROLE_MANAGER;
 import static org.keycloak.testsuite.broker.AbstractBrokerTest.ROLE_USER;
 import static org.keycloak.testsuite.util.Matchers.isSamlResponse;
 
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class KcSamlBrokerTest extends AbstractBrokerTest {
 
     @Override

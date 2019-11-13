@@ -30,6 +30,7 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.UserSessionModel;
 import org.keycloak.models.cache.infinispan.ClientAdapter;
 import org.keycloak.models.cache.infinispan.RealmAdapter;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.runonserver.RunOnServerDeployment;
 
 import java.util.List;
@@ -43,12 +44,13 @@ import static org.keycloak.testsuite.arquillian.DeploymentTargetModifier.AUTH_SE
 import org.keycloak.testsuite.AbstractTestRealmKeycloakTest;
 import org.keycloak.testsuite.Assert;
 import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class CacheTest extends AbstractTestRealmKeycloakTest {
 
 	@Deployment

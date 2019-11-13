@@ -9,9 +9,12 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.testsuite.Assert;
 
 import java.util.List;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 import static org.keycloak.testsuite.broker.BrokerTestTools.waitForPage;
 
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class KcOidcBrokerAcrParameterTest extends AbstractBrokerTest {
 
     private static final String ACR_VALUES = "acr_values";

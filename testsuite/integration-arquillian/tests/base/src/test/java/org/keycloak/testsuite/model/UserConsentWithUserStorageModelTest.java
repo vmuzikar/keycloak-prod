@@ -34,6 +34,7 @@ import org.keycloak.services.managers.RealmManager;
 import org.keycloak.storage.UserStorageProviderModel;
 import org.keycloak.storage.client.ClientStorageProviderModel;
 import org.keycloak.testsuite.AbstractTestRealmKeycloakTest;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.arquillian.annotation.ModelTest;
 import org.keycloak.testsuite.federation.HardcodedClientStorageProviderFactory;
 import org.keycloak.testsuite.federation.UserMapStorageFactory;
@@ -44,10 +45,12 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.keycloak.storage.UserStorageProviderModel.IMPORT_ENABLED;
 import static org.keycloak.testsuite.arquillian.DeploymentTargetModifier.AUTH_SERVER_CURRENT;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 /**
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class UserConsentWithUserStorageModelTest extends AbstractTestRealmKeycloakTest {
 
     @Deployment

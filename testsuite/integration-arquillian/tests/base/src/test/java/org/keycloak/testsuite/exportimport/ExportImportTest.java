@@ -30,6 +30,7 @@ import org.keycloak.exportimport.singlefile.SingleFileExportProviderFactory;
 import org.keycloak.representations.idm.*;
 import org.keycloak.testsuite.AbstractKeycloakTest;
 import org.keycloak.testsuite.Assert;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.runonserver.RunHelpers;
 import org.keycloak.testsuite.runonserver.RunOnServerDeployment;
 import org.keycloak.testsuite.util.UserBuilder;
@@ -43,6 +44,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.keycloak.testsuite.admin.AbstractAdminTest.loadJson;
+import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 /**
  *
@@ -50,6 +52,7 @@ import static org.keycloak.testsuite.admin.AbstractAdminTest.loadJson;
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  * @author Stan Silvert ssilvert@redhat.com (C) 2016 Red Hat Inc.
  */
+@AuthServerContainerExclude(AuthServer.REMOTE)
 public class ExportImportTest extends AbstractKeycloakTest {
 
     @Deployment
