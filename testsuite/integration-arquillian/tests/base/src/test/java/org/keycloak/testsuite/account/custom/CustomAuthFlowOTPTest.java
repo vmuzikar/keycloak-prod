@@ -51,12 +51,9 @@ import static org.keycloak.authentication.authenticators.browser.ConditionalOtpF
 import static org.keycloak.authentication.authenticators.browser.ConditionalOtpFormAuthenticator.SKIP_OTP_ROLE;
 import static org.keycloak.models.UserModel.RequiredAction.CONFIGURE_TOTP;
 import static org.keycloak.representations.idm.CredentialRepresentation.PASSWORD;
+import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.AUTH_SERVER_PORT;
 import static org.keycloak.testsuite.util.URLAssert.assertCurrentUrlStartsWith;
 
-/**
- *
- * @author <a href="mailto:vramik@redhat.com">Vlastislav Ramik</a>
- */
 public class CustomAuthFlowOTPTest extends AbstractCustomAccountManagementTest {
 
     private final TimeBasedOTP totp = new TimeBasedOTP();

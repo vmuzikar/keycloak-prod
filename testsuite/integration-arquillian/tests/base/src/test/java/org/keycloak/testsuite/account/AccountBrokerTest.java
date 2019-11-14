@@ -33,8 +33,6 @@ import org.keycloak.testsuite.broker.KcOidcBrokerConfiguration;
 import org.keycloak.testsuite.pages.AccountFederatedIdentityPage;
 import org.keycloak.testsuite.pages.LoginPage;
 import org.keycloak.testsuite.util.UserBuilder;
-import org.keycloak.testsuite.util.WaitUtils;
-import org.openqa.selenium.WebElement;
 
 import javax.ws.rs.core.Response;
 
@@ -97,6 +95,8 @@ public class AccountBrokerTest extends AbstractBaseBrokerTest {
                 // Remove default client scopes for this test
                 client.setDefaultClientScopes(Collections.emptyList());
 
+                fixAuthServerHostAndPortForClientRepresentation(client);
+
                 providerRealm.clients().create(client).close();
             }
         }
@@ -106,6 +106,8 @@ public class AccountBrokerTest extends AbstractBaseBrokerTest {
             RealmResource consumerRealm = adminClient.realm(bc.consumerRealmName());
             for (ClientRepresentation client : clients) {
                 log.debug("adding client " + client.getName() + " to realm " + bc.consumerRealmName());
+
+                fixAuthServerHostAndPortForClientRepresentation(client);
 
                 consumerRealm.clients().create(client).close();
             }

@@ -94,16 +94,20 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.keycloak.testsuite.admin.Users.setPasswordFor;
+import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.AUTH_SERVER_HOST;
+import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.AUTH_SERVER_PORT;
+import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.AUTH_SERVER_SCHEME;
+import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.AUTH_SERVER_SSL_REQUIRED;
 import static org.keycloak.testsuite.auth.page.AuthRealm.ADMIN;
 import static org.keycloak.testsuite.auth.page.AuthRealm.MASTER;
 import static org.keycloak.testsuite.util.URLUtils.navigateToUri;
+import static org.keycloak.testsuite.util.URLUtils.removePort80;
 
 /**
  *
@@ -112,11 +116,6 @@ import static org.keycloak.testsuite.util.URLUtils.navigateToUri;
 @RunWith(KcArquillian.class)
 @RunAsClient
 public abstract class AbstractKeycloakTest {
-
-    protected static final boolean AUTH_SERVER_SSL_REQUIRED = Boolean.parseBoolean(System.getProperty("auth.server.ssl.required", "false"));
-    protected static final String AUTH_SERVER_SCHEME = AUTH_SERVER_SSL_REQUIRED ? "https" : "http";
-    protected static final String AUTH_SERVER_PORT = AUTH_SERVER_SSL_REQUIRED ? System.getProperty("auth.server.https.port", "8543") : System.getProperty("auth.server.http.port", "8180");
-
     protected static final String ENGLISH_LOCALE_NAME = "English";
 
     protected Logger log = Logger.getLogger(this.getClass());
@@ -376,6 +375,28 @@ public abstract class AbstractKeycloakTest {
         }
     }
 
+    public void fixAuthServerHostAndPortForClientRepresentation(ClientRepresentation cr) {
+        cr.setBaseUrl(removePort80(replaceAuthHostWithRealHost(cr.getBaseUrl())));
+        cr.setAdminUrl(removePort80(replaceAuthHostWithRealHost(cr.getAdminUrl())));
+
+        if (cr.getRedirectUris() != null && !cr.getRedirectUris().isEmpty()) {
+            List<String> fixedUrls = new ArrayList<>(cr.getRedirectUris().size());
+            for (String url : cr.getRedirectUris()) {
+                fixedUrls.add(removePort80(replaceAuthHostWithRealHost(url)));
+            }
+
+            cr.setRedirectUris(fixedUrls);
+        }
+    }
+
+    public String replaceAuthHostWithRealHost(String url) {
+        if (url != null && (url.contains("localhost:8180") || url.contains("localhost:8543"))) {
+            return url.replaceFirst("localhost:(\\d)+", AUTH_SERVER_HOST + ":" + AUTH_SERVER_PORT);
+        }
+
+        return url;
+    }
+
     public void importTestRealms() {
         addTestRealms();
         log.info("importing test realms");
@@ -390,6 +411,24 @@ public abstract class AbstractKeycloakTest {
                     }
                 }
             }
+
+            if (!AUTH_SERVER_HOST.equals("localhost")) {
+                if (!AUTH_SERVER_SSL_REQUIRED) {
+                    testRealm.setSslRequired("none");
+                }
+                if (testRealm.getClients() != null) {
+                    for (ClientRepresentation cr : testRealm.getClients()) {
+                        fixAuthServerHostAndPortForClientRepresentation(cr);
+                    }
+                }
+
+                if (testRealm.getApplications() != null) {
+                    for (ClientRepresentation cr : testRealm.getApplications()) {
+                        fixAuthServerHostAndPortForClientRepresentation(cr);
+                    }
+                }
+            }
+
             importRealm(testRealm);
         }
     }

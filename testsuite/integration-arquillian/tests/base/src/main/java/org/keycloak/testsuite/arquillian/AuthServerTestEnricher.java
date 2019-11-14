@@ -18,9 +18,12 @@ package org.keycloak.testsuite.arquillian;
 
 import org.apache.commons.lang.StringUtils;
 import org.jboss.arquillian.container.spi.ContainerRegistry;
+import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.spi.event.StartContainer;
 import org.jboss.arquillian.container.spi.event.StartSuiteContainers;
 import org.jboss.arquillian.container.spi.event.StopContainer;
+import org.jboss.arquillian.container.spi.event.container.AfterStart;
+import org.jboss.arquillian.container.spi.event.container.BeforeStop;
 import org.jboss.arquillian.container.test.api.ContainerController;
 import org.jboss.arquillian.core.api.Event;
 import org.jboss.arquillian.core.api.Instance;
@@ -34,6 +37,7 @@ import org.jboss.arquillian.test.spi.event.suite.AfterClass;
 import org.jboss.arquillian.test.spi.event.suite.BeforeClass;
 import org.jboss.arquillian.test.spi.event.suite.BeforeSuite;
 import org.jboss.logging.Logger;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.services.error.KeycloakErrorHandler;
@@ -45,14 +49,11 @@ import org.wildfly.extras.creaper.commands.undertow.AddUndertowListener;
 import org.wildfly.extras.creaper.commands.undertow.RemoveUndertowListener;
 import org.wildfly.extras.creaper.commands.undertow.SslVerifyClient;
 import org.wildfly.extras.creaper.commands.undertow.UndertowListenerType;
-import org.wildfly.extras.creaper.core.CommandFailedException;
 import org.keycloak.testsuite.util.TextFileChecker;
 import org.wildfly.extras.creaper.core.ManagementClient;
-import org.wildfly.extras.creaper.core.online.CliException;
 import org.wildfly.extras.creaper.core.online.OnlineManagementClient;
 import org.wildfly.extras.creaper.core.online.OnlineOptions;
 import org.wildfly.extras.creaper.core.online.operations.Address;
-import org.wildfly.extras.creaper.core.online.operations.OperationException;
 import org.wildfly.extras.creaper.core.online.operations.Operations;
 import org.wildfly.extras.creaper.core.online.operations.admin.Administration;
 
@@ -64,7 +65,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -72,7 +72,11 @@ import java.util.stream.Stream;
 import javax.ws.rs.NotFoundException;
 import org.jboss.arquillian.test.spi.event.suite.After;
 import org.jboss.arquillian.test.spi.event.suite.Before;
+import org.jboss.shrinkwrap.api.importer.ZipImporter;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Assert;
+import static org.keycloak.testsuite.util.URLUtils.removeDefaultPorts;
 
 /**
  *
@@ -93,7 +97,13 @@ public class AuthServerTestEnricher {
     @Inject
     private Event<StopContainer> stopContainerEvent;
 
-    protected static final boolean AUTH_SERVER_SSL_REQUIRED = Boolean.parseBoolean(System.getProperty("auth.server.ssl.required", "true"));
+    private JavaArchive testsuiteProvidersArchive;
+    private String currentContainerName;
+
+    public static final boolean AUTH_SERVER_SSL_REQUIRED = Boolean.parseBoolean(System.getProperty("auth.server.ssl.required", "true"));
+    public static final String AUTH_SERVER_SCHEME = AUTH_SERVER_SSL_REQUIRED ? "https" : "http";
+    public static final String AUTH_SERVER_HOST = System.getProperty("auth.server.host", "localhost");
+    public static final String AUTH_SERVER_PORT = AUTH_SERVER_SSL_REQUIRED ? System.getProperty("auth.server.https.port", "8543") : System.getProperty("auth.server.http.port", "8180");
 
     public static final String AUTH_SERVER_CONTAINER_DEFAULT = "auth-server-undertow";
     public static final String AUTH_SERVER_CONTAINER_PROPERTY = "auth.server.container";
@@ -132,6 +142,10 @@ public class AuthServerTestEnricher {
     @ClassScoped
     private InstanceProducer<OAuthClient> oAuthClientProducer;
 
+    public static boolean isAuthServerRemote() {
+        return AUTH_SERVER_CONTAINER.equals("auth-server-remote");
+    }
+
     public static String getAuthServerContextRoot() {
         return getAuthServerContextRoot(0);
     }
@@ -144,7 +158,7 @@ public class AuthServerTestEnricher {
         String scheme = AUTH_SERVER_SSL_REQUIRED ? "https" : "http";
         int port = AUTH_SERVER_SSL_REQUIRED ? httpsPort : httpPort;
 
-        return String.format("%s://%s:%s", scheme, host, port + clusterPortOffset);
+        return removeDefaultPorts(String.format("%s://%s:%s", scheme, host, port + clusterPortOffset));
     }
 
     public static String getAuthServerBrowserContextRoot() throws MalformedURLException {
@@ -156,14 +170,17 @@ public class AuthServerTestEnricher {
         if (StringUtils.isEmpty(browserHost)) {
             browserHost = contextRoot.getHost();
         }
-        return String.format("%s://%s:%s", contextRoot.getProtocol(), browserHost, contextRoot.getPort());
+        return String.format("%s://%s%s", contextRoot.getProtocol(), browserHost,
+                contextRoot.getPort() == -1 || contextRoot.getPort() == contextRoot.getDefaultPort()
+                        ? ""
+                        : ":" + contextRoot.getPort());
     }
 
     public static OnlineManagementClient getManagementClient() {
         try {
             return ManagementClient.online(OnlineOptions
                     .standalone()
-                    .hostAndPort(System.getProperty("auth.server.host", "localhost"), Integer.parseInt(System.getProperty("auth.server.management.port", "10090")))
+                    .hostAndPort(System.getProperty("auth.server.management.host", "localhost"), Integer.parseInt(System.getProperty("auth.server.management.port", "10090")))
                     .build()
             );
         } catch (IOException e) {
@@ -174,6 +191,7 @@ public class AuthServerTestEnricher {
     public void distinguishContainersInConsoleOutput(@Observes(precedence = 5) StartContainer event) {
         log.info("************************" + event.getContainer().getName()
                 + "*****************************************************************************");
+        currentContainerName = event.getContainer().getName();
     }
 
     public void initializeSuiteContext(@Observes(precedence = 2) BeforeSuite event) {
@@ -311,6 +329,27 @@ public class AuthServerTestEnricher {
         if (suiteContext.isAuthServerMigrationEnabled()) {
             log.info("\n\n### Starting keycloak " + System.getProperty("migrated.auth.server.version", "- previous") + " ###\n\n");
             startContainerEvent.fire(new StartContainer(suiteContext.getMigratedAuthServerInfo().getArquillianContainer()));
+        }
+    }
+
+    public void deployProviders(@Observes(precedence = -1) AfterStart event) throws DeploymentException {
+        if (isAuthServerRemote() && currentContainerName.contains("auth-server")) {
+            this.testsuiteProvidersArchive = ShrinkWrap.create(ZipImporter.class, "testsuiteProviders.jar")
+                    .importFrom(Maven.resolver()
+                        .loadPomFromFile("pom.xml")
+                        .resolve("org.keycloak.testsuite:integration-arquillian-testsuite-providers")
+                        .withoutTransitivity()
+                        .asSingleFile()
+                    ).as(JavaArchive.class)
+                    .addAsManifestResource("jboss-deployment-structure.xml");
+                    
+            event.getDeployableContainer().deploy(testsuiteProvidersArchive);
+        }
+    }
+
+    public void unDeployProviders(@Observes(precedence = 20) BeforeStop event) throws DeploymentException {
+        if (testsuiteProvidersArchive != null) {
+            event.getDeployableContainer().undeploy(testsuiteProvidersArchive);
         }
     }
 

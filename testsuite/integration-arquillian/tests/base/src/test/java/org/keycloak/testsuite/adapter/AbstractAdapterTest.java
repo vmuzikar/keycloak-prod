@@ -53,6 +53,9 @@ import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 
+import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.AUTH_SERVER_PORT;
+import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.AUTH_SERVER_SSL_REQUIRED;
+
 /**
  * <code>@AppServerContainer</code> is needed for stopping recursion in 
  * AppServerTestEnricher.getNearestSuperclassWithAnnotation

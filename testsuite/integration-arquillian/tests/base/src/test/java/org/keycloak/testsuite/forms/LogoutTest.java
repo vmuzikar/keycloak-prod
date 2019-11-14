@@ -40,6 +40,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.keycloak.testsuite.util.URLAssert.assertCurrentUrlEquals;
+
 import org.keycloak.testsuite.auth.page.account.AccountManagement;
 import org.keycloak.testsuite.updaters.ClientAttributeUpdater;
 
@@ -80,7 +82,7 @@ public class LogoutTest extends AbstractTestRealmKeycloakTest {
 
         events.expectLogout(sessionId).detail(Details.REDIRECT_URI, redirectUri).assertEvent();
 
-        assertEquals(redirectUri, driver.getCurrentUrl());
+        assertCurrentUrlEquals(redirectUri);
 
         loginPage.open();
         loginPage.login("test-user@localhost", "password");
@@ -106,7 +108,7 @@ public class LogoutTest extends AbstractTestRealmKeycloakTest {
 
         events.expectLogout(sessionId).removeDetail(Details.REDIRECT_URI).assertEvent();
 
-        assertEquals(logoutUrl, driver.getCurrentUrl());
+        assertCurrentUrlEquals(logoutUrl);
 
         loginPage.open();
         loginPage.login("test-user@localhost", "password");
@@ -206,7 +208,7 @@ public class LogoutTest extends AbstractTestRealmKeycloakTest {
         String logoutUrl = oauth.getLogoutUrl().sessionState(sessionId).build();
         driver.navigate().to(logoutUrl);
 
-        assertEquals(logoutUrl, driver.getCurrentUrl());
+        assertCurrentUrlEquals(logoutUrl);
 
         loginPage.open();
         loginPage.login("test-user@localhost", "password");

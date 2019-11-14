@@ -25,6 +25,7 @@ import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assume.assumeTrue;
+import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.AUTH_SERVER_PORT;
 import static org.keycloak.testsuite.util.WaitUtils.pause;
 
 public class DockerClientTest extends AbstractKeycloakTest {
@@ -61,7 +62,7 @@ public class DockerClientTest extends AbstractKeycloakTest {
         }
         Assert.assertNotNull("Could not resolve host machine's IP address for docker adapter, and 'host.ip' system poperty not set. Client will not be able to authenticate against the keycloak server!", hostIp);
 
-        authServerPort = AUTH_SERVER_SSL_REQUIRED ? System.getProperty("auth.server.https.port") : System.getProperty("auth.server.http.port");
+        authServerPort = AUTH_SERVER_PORT;
     }
 
     @Override

@@ -32,6 +32,7 @@ import org.w3c.dom.Document;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
+import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.getAuthServerContextRoot;
 import static org.keycloak.testsuite.broker.AbstractBrokerTest.ROLE_MANAGER;
 import static org.keycloak.testsuite.broker.AbstractBrokerTest.ROLE_USER;
 import static org.keycloak.testsuite.util.Matchers.isSamlResponse;
@@ -211,7 +212,7 @@ public class KcSamlBrokerTest extends AbstractBrokerTest {
     // KEYCLOAK-6106
     @Test
     public void loginClientWithDotsInName() throws Exception {
-        AuthnRequestType loginRep = SamlClient.createLoginRequestDocument(AbstractSamlTest.SAML_CLIENT_ID_SALES_POST + ".dot/ted", AUTH_SERVER_SCHEME + "://localhost:" + AUTH_SERVER_PORT + "/sales-post/saml", null);
+        AuthnRequestType loginRep = SamlClient.createLoginRequestDocument(AbstractSamlTest.SAML_CLIENT_ID_SALES_POST + ".dot/ted", getAuthServerContextRoot() + "/sales-post/saml", null);
 
         Document doc = SAML2Request.convert(loginRep);
 

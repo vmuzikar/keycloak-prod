@@ -38,7 +38,6 @@ import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.EventRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.keycloak.services.resources.account.AccountFormService;
 import org.keycloak.testsuite.AbstractTestRealmKeycloakTest;
 import org.keycloak.testsuite.AssertEvents;
 import org.keycloak.testsuite.admin.ApiUtil;
@@ -63,8 +62,6 @@ import org.keycloak.testsuite.util.OAuthClient;
 import org.keycloak.testsuite.util.RealmBuilder;
 import org.keycloak.testsuite.util.UIUtils;
 import org.keycloak.testsuite.util.UserBuilder;
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.Collections;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -82,8 +79,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.AUTH_SERVER_SSL_REQUIRED;
+import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.getAuthServerContextRoot;
 
-import javax.ws.rs.core.UriBuilder;
 
 /**
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
@@ -139,7 +137,7 @@ public class AccountFormServiceTest extends AbstractTestRealmKeycloakTest {
         if (AUTH_SERVER_SSL_REQUIRED) {
             // Some scenarios here use redirections, so we need to fix the base url
             findTestApp(testRealm)
-                  .setBaseUrl(String.format("%s://localhost:%s/auth/realms/master/app/auth", AUTH_SERVER_SCHEME, AUTH_SERVER_PORT));
+                  .setBaseUrl(String.format("%s/auth/realms/master/app/auth", getAuthServerContextRoot()));
         }
     }
 
@@ -205,7 +203,7 @@ public class AccountFormServiceTest extends AbstractTestRealmKeycloakTest {
 
         Assert.assertTrue(appPage.isCurrent());
 
-        driver.navigate().to(String.format("%s?referrer=test-app&referrer_uri=%s://localhost:%s/auth/realms/master/app/auth?test", profilePage.getPath(), AUTH_SERVER_SCHEME, AUTH_SERVER_PORT));
+        driver.navigate().to(String.format("%s?referrer=test-app&referrer_uri=%s/auth/realms/master/app/auth?test", profilePage.getPath(), getAuthServerContextRoot()));
         Assert.assertTrue(profilePage.isCurrent());
         profilePage.backToApplication();
 

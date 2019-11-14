@@ -3,6 +3,7 @@ package org.keycloak.testsuite.ssl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.keycloak.testsuite.admin.AbstractAdminTest.loadJson;
+import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.AUTH_SERVER_SSL_REQUIRED;
 
 import java.net.URISyntaxException;
 import java.util.HashMap;
