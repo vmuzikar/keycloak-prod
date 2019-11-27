@@ -116,9 +116,10 @@ public class LogoutEndpoint {
         }
 
         UserSessionModel userSession = null;
+        IDToken idToken = null;
         if (encodedIdToken != null) {
             try {
-                IDToken idToken = tokenManager.verifyIDTokenSignature(session, encodedIdToken);
+                idToken = tokenManager.verifyIDTokenSignature(session, encodedIdToken);
                 userSession = session.sessions().getUserSession(realm, idToken.getSessionState());
             } catch (OAuthErrorException e) {
                 event.event(EventType.LOGOUT);
@@ -131,14 +132,14 @@ public class LogoutEndpoint {
         AuthenticationManager.AuthResult authResult = AuthenticationManager.authenticateIdentityCookie(session, realm, false);
         if (authResult != null) {
             userSession = userSession != null ? userSession : authResult.getSession();
-            if (redirect != null) userSession.setNote(OIDCLoginProtocol.LOGOUT_REDIRECT_URI, redirect);
-            if (state != null) userSession.setNote(OIDCLoginProtocol.LOGOUT_STATE_PARAM, state);
-            userSession.setNote(AuthenticationManager.KEYCLOAK_LOGOUT_PROTOCOL, OIDCLoginProtocol.LOGIN_PROTOCOL);
-            logger.debug("Initiating OIDC browser logout");
-            Response response =  AuthenticationManager.browserLogout(session, realm, authResult.getSession(), session.getContext().getUri(), clientConnection, headers, initiatingIdp);
-            logger.debug("finishing OIDC browser logout");
-            return response;
-        } else if (userSession != null) { // non browser logout
+            return initiateBrowserLogout(userSession, redirect, state, initiatingIdp);
+        }
+        else if (userSession != null) {
+            // identity cookie is missing but there's valid id_token_hint which matches session cookie => continue with browser logout
+            if (idToken != null && idToken.getSessionState().equals(AuthenticationManager.getSessionIdFromSessionCookie(session))) {
+                return initiateBrowserLogout(userSession, redirect, state, initiatingIdp);
+            }
+            // non browser logout
             event.event(EventType.LOGOUT);
             AuthenticationManager.backchannelLogout(session, realm, userSession, session.getContext().getUri(), clientConnection, headers, true);
             event.user(userSession.getUser()).session(userSession).success();
@@ -235,4 +236,13 @@ public class LogoutEndpoint {
         }
     }
 
+    private Response initiateBrowserLogout(UserSessionModel userSession, String redirect, String state, String initiatingIdp ) {
+        if (redirect != null) userSession.setNote(OIDCLoginProtocol.LOGOUT_REDIRECT_URI, redirect);
+        if (state != null) userSession.setNote(OIDCLoginProtocol.LOGOUT_STATE_PARAM, state);
+        userSession.setNote(AuthenticationManager.KEYCLOAK_LOGOUT_PROTOCOL, OIDCLoginProtocol.LOGIN_PROTOCOL);
+        logger.debug("Initiating OIDC browser logout");
+        Response response =  AuthenticationManager.browserLogout(session, realm, userSession, session.getContext().getUri(), clientConnection, headers, initiatingIdp);
+        logger.debug("finishing OIDC browser logout");
+        return response;
+    }
 }
