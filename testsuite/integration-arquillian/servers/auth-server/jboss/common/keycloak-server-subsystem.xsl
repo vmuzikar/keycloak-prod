@@ -50,6 +50,9 @@
             <module>org.keycloak.testsuite.integration-arquillian-testsuite-providers</module>
         </modules>
     </xsl:variable>
+    <xsl:variable name="detailLengthDefinition">
+        <property name="max-detail-length" value="1000"/>
+    </xsl:variable>
     
     <!--inject provider; note: due to ibmjdk issues it tries to find out provider which has no attributes-->
     <xsl:template match="//*[local-name()='subsystem' and starts-with(namespace-uri(), $nsKS)]//*[local-name()='provider' and not(@*)]">
@@ -75,6 +78,17 @@
             <xsl:apply-templates select="@*|node()" />
             <xsl:copy-of select="$truststoreDefinition"/>
             <xsl:copy-of select="$samlPortsDefinition"/>
+        </xsl:copy>
+    </xsl:template>
+
+    <!--inject truststore and SAML port-protocol mappings-->
+    <xsl:template match="//*[local-name()='subsystem' and starts-with(namespace-uri(), $nsKS)]
+                         /*[local-name()='spi' and starts-with(namespace-uri(), $nsKS) and @name='eventsStore']
+                         /*[local-name()='provider' and starts-with(namespace-uri(), $nsKS)]
+                         /*[local-name()='properties' and starts-with(namespace-uri(), $nsKS)]">
+        <xsl:copy>
+            <xsl:apply-templates select="@*|node()" />
+            <xsl:copy-of select="$detailLengthDefinition"/>
         </xsl:copy>
     </xsl:template>
 

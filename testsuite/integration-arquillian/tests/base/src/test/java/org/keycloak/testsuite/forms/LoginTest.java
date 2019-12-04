@@ -50,7 +50,6 @@ import org.keycloak.testsuite.util.Matchers;
 import org.keycloak.testsuite.util.RealmBuilder;
 import org.keycloak.testsuite.util.TokenSignatureUtil;
 import org.keycloak.testsuite.util.UserBuilder;
-import org.openqa.selenium.Cookie;
 import org.openqa.selenium.NoSuchElementException;
 
 import javax.ws.rs.client.Client;
@@ -58,6 +57,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.util.Map;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -67,6 +67,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.keycloak.testsuite.admin.ApiUtil.findClientByClientId;
+import org.keycloak.testsuite.updaters.RealmAttributeUpdater;
+import org.keycloak.testsuite.util.DroneUtils;
 import static org.keycloak.testsuite.util.OAuthClient.AUTH_SERVER_ROOT;
 
 /**
@@ -175,6 +177,23 @@ public class LoginTest extends AbstractTestRealmKeycloakTest {
 
         response.close();
         client.close();
+    }
+
+    @Test
+    public void loginWithLongRedirectUri() throws Exception {
+        try (AutoCloseable c = new RealmAttributeUpdater(adminClient.realm("test"))
+                .updateWith(r -> r.setEventsEnabled(true)).update()) {
+            String randomLongString = RandomStringUtils.random(2500, true, true);
+            String longRedirectUri = oauth.getRedirectUri() + "?longQueryParameterValue=" + randomLongString;
+            UriBuilder longLoginUri = UriBuilder.fromUri(oauth.getLoginFormUrl()).replaceQueryParam(OAuth2Constants.REDIRECT_URI, longRedirectUri);
+
+            DroneUtils.getCurrentDriver().navigate().to(longLoginUri.build().toString());
+
+            loginPage.assertCurrent();
+            loginPage.login("login-test", "password");
+
+            events.expectLogin().user(userId).detail(OAuth2Constants.REDIRECT_URI, longRedirectUri).assertEvent();
+        }
     }
 
     @Test
