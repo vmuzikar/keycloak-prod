@@ -104,7 +104,7 @@ public class PartialImportTest extends AbstractAuthTest {
         ClientRepresentation client = new ClientRepresentation();
         client.setClientId(CLIENT_ROLES_CLIENT);
         client.setName(CLIENT_ROLES_CLIENT);
-        client.setRootUrl("foo");
+        client.setRootUrl("http://foo");
         client.setProtocol("openid-connect");
         Response resp = testRealmResource().clients().create(client);
 

@@ -345,7 +345,7 @@ public class ClientScopeTest extends AbstractClientTest {
         ClientRepresentation clientRep = new ClientRepresentation();
         clientRep.setClientId("bar-client");
         clientRep.setName("bar-client");
-        clientRep.setRootUrl("foo");
+        clientRep.setRootUrl("http://foo");
         clientRep.setProtocol("openid-connect");
         clientRep.setDefaultClientScopes(Collections.singletonList("foo-scope"));
         String clientDbId = createClient(clientRep);

@@ -116,7 +116,7 @@ public abstract class AbstractClientTest extends AbstractAuthTest {
         ClientRepresentation clientRep = new ClientRepresentation();
         clientRep.setClientId(name);
         clientRep.setName(name);
-        clientRep.setRootUrl("foo");
+        clientRep.setRootUrl("http://foo");
         clientRep.setProtocol("openid-connect"); 
         return clientRep;
     }
