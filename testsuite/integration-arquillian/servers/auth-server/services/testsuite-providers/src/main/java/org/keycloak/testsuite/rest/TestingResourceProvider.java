@@ -59,6 +59,7 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.services.managers.AuthenticationManager;
 import org.keycloak.services.resource.RealmResourceProvider;
 import org.keycloak.services.scheduled.ClearExpiredUserSessions;
+import org.keycloak.services.util.CookieHelper;
 import org.keycloak.storage.UserStorageProvider;
 import org.keycloak.testsuite.components.TestProvider;
 import org.keycloak.testsuite.components.TestProviderFactory;
@@ -556,7 +557,7 @@ public class TestingResourceProvider implements RealmResourceProvider {
     @Produces(MediaType.APPLICATION_JSON)
     public String getSSOCookieValue() {
         Map<String, Cookie> cookies = request.getHttpHeaders().getCookies();
-        Cookie cookie = cookies.get(AuthenticationManager.KEYCLOAK_IDENTITY_COOKIE);
+        Cookie cookie = CookieHelper.getCookie(cookies, AuthenticationManager.KEYCLOAK_IDENTITY_COOKIE);
         if (cookie == null) return null;
         return cookie.getValue();
     }

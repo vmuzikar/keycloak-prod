@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.Math.toIntExact;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.both;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
@@ -82,11 +83,16 @@ public class JavascriptAdapterTest extends AbstractJavascriptTest {
 
     @Before
     public void setDefaultEnvironment() {
-        testAppUrl = authServerContextRootPage + JAVASCRIPT_URL + "/index.html";
+        testAppUrl = authServerContextRootPage.toString().replace("localhost", NIP_IO_URL) + JAVASCRIPT_URL + "/index.html";
 
         jsDriverTestRealmLoginPage.setAuthRealm(REALM_NAME);
         oAuthGrantPage.setAuthRealm(REALM_NAME);
         applicationsPage.setAuthRealm(REALM_NAME);
+
+        jsDriver.navigate().to(oauth.getLoginFormUrl());
+        waitForPageToLoad();
+        events.poll();
+        jsDriver.manage().deleteAllCookies();
 
         jsDriver.navigate().to(testAppUrl);
 
@@ -140,11 +146,18 @@ public class JavascriptAdapterTest extends AbstractJavascriptTest {
                 .login(this::assertOnLoginPage)
                 .loginForm(testUser, this::assertOnTestAppUrl)
                 .init(defaultArguments(), this::assertSuccessfullyLoggedIn)
+                .logout(this::assertOnTestAppUrl)
+
+                .init(defaultArguments(), this::assertInitNotAuth)
                 .login("{kcLocale: 'de'}", assertLocaleIsSet("de"))
+                .loginForm(testUser, this::assertOnTestAppUrl)
                 .init(defaultArguments(), this::assertSuccessfullyLoggedIn)
+                .logout(this::assertOnTestAppUrl)
+
+                .init(defaultArguments(), this::assertInitNotAuth)
                 .login("{kcLocale: 'en'}", assertLocaleIsSet("en"));
     }
-    
+
     @Test
     public void testRefreshToken() {
         testExecutor.init(defaultArguments(), this::assertInitNotAuth)
@@ -314,7 +327,8 @@ public class JavascriptAdapterTest extends AbstractJavascriptTest {
                 .addHeader("Authorization", "Bearer ' + keycloak.token + '");
 
         testExecutor.init(defaultArguments())
-                .sendXMLHttpRequest(request, assertResponseStatus(401))
+                // Possibility of 0 and 401 is caused by this issue: https://issues.redhat.com/browse/KEYCLOAK-12686
+                .sendXMLHttpRequest(request, response -> assertThat(response, hasEntry(is("status"), anyOf(is(0L), is(401L)))))
                 .refresh();
         if (!"phantomjs".equals(System.getProperty("js.browser"))) {
             // I have no idea why, but this request doesn't work with phantomjs, it works in chrome
@@ -358,7 +372,8 @@ public class JavascriptAdapterTest extends AbstractJavascriptTest {
 
         setTimeOffset(67);
         testExecutor.addTimeSkew(-34)
-                .sendXMLHttpRequest(request, assertResponseStatus(401))
+                // Possibility of 0 and 401 is caused by this issue: https://issues.redhat.com/browse/KEYCLOAK-12686
+                .sendXMLHttpRequest(request, response -> assertThat(response, hasEntry(is("status"), anyOf(is(0L), is(401L)))))
                 .refreshToken(5, assertEventsContains("Auth Refresh Success"))
                 .sendXMLHttpRequest(request, assertResponseStatus(200));
     }

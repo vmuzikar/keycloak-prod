@@ -66,6 +66,7 @@ import org.junit.BeforeClass;
 import org.openqa.selenium.Cookie;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.keycloak.services.util.CookieHelper.LEGACY_COOKIE;
 
 /**
  * Tests Undertow Adapter
@@ -100,7 +101,7 @@ public class ImpersonationTest extends AbstractKeycloakTest {
 
         testRealms.add(realm.build());
     }
-    
+
     @BeforeClass
     public static void enabled() {
         Assume.assumeFalse("impersonation".equals(System.getProperty("feature.name"))
@@ -234,7 +235,7 @@ public class ImpersonationTest extends AbstractKeycloakTest {
                     .detail(Details.IMPERSONATOR_REALM, adminRealm)
                     .client((String) null).assertEvent();
 
-            NewCookie cookie = response.getCookies().get(AuthenticationManager.KEYCLOAK_IDENTITY_COOKIE);
+            NewCookie cookie = response.getCookies().get(AuthenticationManager.KEYCLOAK_IDENTITY_COOKIE + LEGACY_COOKIE);
 
             Assert.assertNotNull(cookie);
 
