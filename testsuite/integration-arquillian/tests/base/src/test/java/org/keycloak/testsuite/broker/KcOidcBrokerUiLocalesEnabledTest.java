@@ -47,7 +47,7 @@ public class KcOidcBrokerUiLocalesEnabledTest extends KcOidcBrokerTest {
 
 
         log.debug("Clicking social " + bc.getIDPAlias());
-        accountLoginPage.clickSocial(bc.getIDPAlias());
+        loginPage.clickSocial(bc.getIDPAlias());
 
         waitForPage(driver, "log in to", true);
 
@@ -57,7 +57,7 @@ public class KcOidcBrokerUiLocalesEnabledTest extends KcOidcBrokerTest {
         Assert.assertThat(UI_LOCALES_PARAM + "=" + ENGLISH.toLanguageTag() + " should be part of the url",
                 driver.getCurrentUrl(), containsString(UI_LOCALES_PARAM + "=" + ENGLISH.toLanguageTag()));
 
-        accountLoginPage.login(bc.getUserLogin(), bc.getUserPassword());
+        loginPage.login(bc.getUserLogin(), bc.getUserPassword());
         waitForPage(driver, "update account information", false);
 
         updateAccountInformationPage.assertCurrent();

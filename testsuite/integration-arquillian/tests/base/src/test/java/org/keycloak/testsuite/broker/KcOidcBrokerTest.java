@@ -43,7 +43,6 @@ import org.keycloak.testsuite.admin.ApiUtil;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import org.keycloak.testsuite.pages.LoginConfigTotpPage;
-import org.keycloak.testsuite.pages.LoginPage;
 import org.keycloak.testsuite.pages.LoginTotpPage;
 import org.keycloak.testsuite.runonserver.RunOnServerDeployment;
 
@@ -56,9 +55,6 @@ public class KcOidcBrokerTest extends AbstractBrokerTest {
                 .addPackages(true, "org.keycloak.testsuite")
                 .addPackages(true, "org.keycloak.admin.client.resource");
     }
-
-    @Page
-    protected LoginPage loginPage;
 
     @Page
     protected LoginTotpPage loginTotpPage;
@@ -114,7 +110,7 @@ public class KcOidcBrokerTest extends AbstractBrokerTest {
             driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
 
             log.debug("Clicking social " + bc.getIDPAlias());
-            accountLoginPage.clickSocial(bc.getIDPAlias());
+            loginPage.clickSocial(bc.getIDPAlias());
 
             waitForPage(driver, "log in to", true);
 
@@ -122,7 +118,7 @@ public class KcOidcBrokerTest extends AbstractBrokerTest {
                     driver.getCurrentUrl().contains("/auth/realms/" + bc.providerRealmName() + "/"));
 
             log.debug("Logging in");
-            accountLoginPage.login(bc.getUserLogin(), bc.getUserPassword());
+            loginPage.login(bc.getUserLogin(), bc.getUserPassword());
 
             waitForPage(driver, "update account information", false);
 
@@ -234,14 +230,6 @@ public class KcOidcBrokerTest extends AbstractBrokerTest {
             config.getConfig().put("update.profile.on.first.login", IdentityProviderRepresentation.UPFLM_OFF);
             flows.updateAuthenticatorConfig(config.getId(), config);
         }
-    }
-
-    private void logInWithBroker(BrokerConfiguration bc) {
-        log.debug("Clicking social " + bc.getIDPAlias());
-        loginPage.clickSocial(bc.getIDPAlias());
-        waitForPage(driver, "log in to", true);
-        log.debug("Logging in");
-        loginPage.login(bc.getUserLogin(), bc.getUserPassword());
     }
 
     private void assertNumFederatedIdentities(String userId, int expected) {

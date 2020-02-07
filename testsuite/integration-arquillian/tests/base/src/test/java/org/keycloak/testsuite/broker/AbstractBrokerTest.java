@@ -119,7 +119,7 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
         driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
 
         log.debug("Clicking social " + bc.getIDPAlias());
-        accountLoginPage.clickSocial(bc.getIDPAlias());
+        loginPage.clickSocial(bc.getIDPAlias());
 
         waitForPage(driver, "log in to", true);
 
@@ -127,7 +127,7 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
           driver.getCurrentUrl().contains("/auth/realms/" + bc.providerRealmName() + "/"));
 
         log.debug("Logging in");
-        accountLoginPage.login(bc.getUserLogin(), bc.getUserPassword());
+        loginPage.login(bc.getUserLogin(), bc.getUserPassword());
 
         waitForPage(driver, "update account information", false);
 
@@ -166,13 +166,13 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
         driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
 
         log.debug("Clicking social " + bc.getIDPAlias());
-        accountLoginPage.clickSocial(bc.getIDPAlias());
+        loginPage.clickSocial(bc.getIDPAlias());
 
         waitForPage(driver, "log in to", true);
 
         Assert.assertTrue("Driver should be on the provider realm page right now", driver.getCurrentUrl().contains("/auth/realms/" + bc.providerRealmName() + "/"));
 
-        accountLoginPage.login(bc.getUserLogin(), bc.getUserPassword());
+        loginPage.login(bc.getUserLogin(), bc.getUserPassword());
 
         assertEquals(accountPage.buildUri().toASCIIString().replace("master", "consumer") + "/", driver.getCurrentUrl());
 
@@ -196,7 +196,7 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
             driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
 
             log.debug("Clicking social " + bc.getIDPAlias());
-            accountLoginPage.clickSocial(bc.getIDPAlias());
+            loginPage.clickSocial(bc.getIDPAlias());
 
             waitForPage(driver, "log in to", true);
 
@@ -204,7 +204,7 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
                     driver.getCurrentUrl().contains("/auth/realms/" + bc.providerRealmName() + "/"));
 
             log.debug("Logging in");
-            accountLoginPage.login(bc.getUserLogin(), bc.getUserPassword());
+            loginPage.login(bc.getUserLogin(), bc.getUserPassword());
 
             waitForPage(driver, "update account information", false);
 
@@ -252,7 +252,7 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
             driver.navigate().to(getLoginUrl(bc.consumerRealmName(), "broker-app"));
 
             log.debug("Clicking social " + bc.getIDPAlias());
-            accountLoginPage.clickSocial(bc.getIDPAlias());
+            loginPage.clickSocial(bc.getIDPAlias());
 
             waitForPage(driver, "log in to", true);
 
@@ -260,7 +260,7 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
                     driver.getCurrentUrl().contains("/auth/realms/" + bc.providerRealmName() + "/"));
 
             log.debug("Logging in");
-            accountLoginPage.login(bc.getUserLogin(), bc.getUserPassword());
+            loginPage.login(bc.getUserLogin(), bc.getUserPassword());
 
             waitForPage(driver, "update account information", false);
 
@@ -332,12 +332,12 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
                 Assert.fail("Timeout while waiting for login element enabled");
             }
 
-            accountLoginPage.login(bc.getUserLogin(), "invalid");
+            loginPage.login(bc.getUserLogin(), "invalid");
         }
 
-        assertEquals("Invalid username or password.", accountLoginPage.getError());
+        assertEquals("Invalid username or password.", loginPage.getError());
 
-        accountLoginPage.clickSocial(bc.getIDPAlias());
+        loginPage.clickSocial(bc.getIDPAlias());
 
         try {
             waitForPage(driver, "log in to", true);
@@ -349,7 +349,7 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
 
         Assert.assertTrue("Driver should be on the provider realm page right now", driver.getCurrentUrl().contains("/auth/realms/" + bc.providerRealmName() + "/"));
 
-        accountLoginPage.login(bc.getUserLogin(), bc.getUserPassword());
+        loginPage.login(bc.getUserLogin(), bc.getUserPassword());
 
         assertEquals("Account is disabled, contact admin.", errorPage.getError());
     }
@@ -373,7 +373,7 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
         driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
 
         log.debug("Clicking social " + bc.getIDPAlias());
-        accountLoginPage.clickSocial(bc.getIDPAlias());
+        loginPage.clickSocial(bc.getIDPAlias());
 
         waitForPage(driver, "log in to", true);
 
@@ -381,7 +381,7 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
                 driver.getCurrentUrl().contains("/auth/realms/" + bc.providerRealmName() + "/"));
 
         log.debug("Logging in");
-        accountLoginPage.login(bc.getUserLogin(), bc.getUserPassword());
+        loginPage.login(bc.getUserLogin(), bc.getUserPassword());
 
         driver.manage().timeouts().pageLoadTimeout(30, TimeUnit.MINUTES);
 
@@ -493,7 +493,7 @@ public abstract class AbstractBrokerTest extends AbstractBaseBrokerTest {
         driver.manage().deleteAllCookies();
 
         log.debug("Clicking social " + bc.getIDPAlias());
-        accountLoginPage.clickSocial(bc.getIDPAlias());
+        loginPage.clickSocial(bc.getIDPAlias());
 
         waitForPage(driver, "sorry", false);
         errorPage.assertCurrent();

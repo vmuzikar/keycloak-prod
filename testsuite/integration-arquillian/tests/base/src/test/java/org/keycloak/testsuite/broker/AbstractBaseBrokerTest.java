@@ -27,11 +27,9 @@ import org.junit.Before;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
-import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.testsuite.AbstractKeycloakTest;
 import org.keycloak.testsuite.Assert;
 import org.keycloak.common.util.Retry;
-import org.keycloak.testsuite.admin.ApiUtil;
 import org.keycloak.testsuite.pages.AccountPasswordPage;
 import org.keycloak.testsuite.pages.AccountUpdateProfilePage;
 import org.keycloak.testsuite.pages.ErrorPage;
@@ -40,6 +38,8 @@ import org.keycloak.testsuite.pages.LoginPage;
 import org.keycloak.testsuite.pages.UpdateAccountInformationPage;
 import org.keycloak.testsuite.util.MailServer;
 import org.openqa.selenium.TimeoutException;
+
+import javax.ws.rs.core.Response;
 
 import static org.junit.Assert.assertThat;
 import static org.keycloak.testsuite.broker.BrokerTestTools.encodeUrl;
@@ -55,9 +55,8 @@ public abstract class AbstractBaseBrokerTest extends AbstractKeycloakTest {
     @Page
     protected AccountUpdateProfilePage accountUpdateProfilePage;
 
-    // TODO: Rename this to loginPage
     @Page
-    protected LoginPage accountLoginPage;
+    protected LoginPage loginPage;
 
     @Page
     protected UpdateAccountInformationPage updateAccountInformationPage;
@@ -86,6 +85,28 @@ public abstract class AbstractBaseBrokerTest extends AbstractKeycloakTest {
     public void addTestRealms(List<RealmRepresentation> testRealms) {
     }
 
+    protected void addClientsToProviderAndConsumer() {
+        List<ClientRepresentation> clients = bc.createProviderClients(suiteContext);
+        final RealmResource providerRealm = adminClient.realm(bc.providerRealmName());
+        for (ClientRepresentation client : clients) {
+            log.debug("adding client " + client.getClientId() + " to realm " + bc.providerRealmName());
+
+            final Response resp = providerRealm.clients().create(client);
+            resp.close();
+        }
+
+        clients = bc.createConsumerClients(suiteContext);
+        if (clients != null) {
+            RealmResource consumerRealm = adminClient.realm(bc.consumerRealmName());
+            for (ClientRepresentation client : clients) {
+                log.debug("adding client " + client.getClientId() + " to realm " + bc.consumerRealmName());
+
+                Response resp = consumerRealm.clients().create(client);
+                resp.close();
+            }
+        }
+    }
+
     @Before
     public void beforeBrokerTest() {
         importRealm(bc.createConsumerRealm());
@@ -101,24 +122,24 @@ public abstract class AbstractBaseBrokerTest extends AbstractKeycloakTest {
 
     protected void logInAsUserInIDP() {
         driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
-
-        log.debug("Clicking social " + bc.getIDPAlias());
-        accountLoginPage.clickSocial(bc.getIDPAlias());
-
-        waitForPage(driver, "log in to", true);
-
-        Assert.assertTrue("Driver should be on the provider realm page right now",
-                driver.getCurrentUrl().contains("/auth/realms/" + bc.providerRealmName() + "/"));
-
-        log.debug("Logging in");
-        accountLoginPage.login(bc.getUserLogin(), bc.getUserPassword());
+        logInWithBroker(bc);
     }
 
+    protected void logInWithBroker(BrokerConfiguration bc) {
+        log.debug("Clicking social " + bc.getIDPAlias());
+        loginPage.clickSocial(bc.getIDPAlias());
+        waitForPage(driver, "log in to", true);
+        log.debug("Logging in");
+        loginPage.login(bc.getUserLogin(), bc.getUserPassword());
+    }
 
     /** Logs in the IDP and updates account information */
     protected void logInAsUserInIDPForFirstTime() {
         logInAsUserInIDP();
+        updateAccountInformation();
+    }
 
+    protected void updateAccountInformation() {
         waitForPage(driver, "update account information", false);
 
         Assert.assertTrue(updateAccountInformationPage.isCurrent());

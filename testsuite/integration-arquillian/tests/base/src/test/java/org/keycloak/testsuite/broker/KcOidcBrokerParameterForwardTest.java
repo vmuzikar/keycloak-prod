@@ -51,7 +51,7 @@ public class KcOidcBrokerParameterForwardTest extends KcOidcBrokerTest {
         driver.navigate().to(driver.getCurrentUrl() + queryString);
 
         log.debug("Clicking social " + bc.getIDPAlias());
-        accountLoginPage.clickSocial(bc.getIDPAlias());
+        loginPage.clickSocial(bc.getIDPAlias());
 
         waitForPage(driver, "log in to", true);
 
@@ -67,7 +67,7 @@ public class KcOidcBrokerParameterForwardTest extends KcOidcBrokerTest {
         Assert.assertThat("\"" + PARAMETER_NOT_FORWARDED +"\"" + " should be NOT part of the url",
                 driver.getCurrentUrl(), not(containsString(PARAMETER_NOT_FORWARDED)));
 
-        accountLoginPage.login(bc.getUserLogin(), bc.getUserPassword());
+        loginPage.login(bc.getUserLogin(), bc.getUserPassword());
         waitForPage(driver, "update account information", false);
 
         updateAccountInformationPage.assertCurrent();

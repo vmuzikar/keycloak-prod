@@ -80,7 +80,7 @@ public class KcOidcBrokerLoginHintTest extends AbstractBrokerTest {
         driver.navigate().to(driver.getCurrentUrl() + "&login_hint=" + USER_EMAIL);
 
         log.debug("Clicking social " + bc.getIDPAlias());
-        accountLoginPage.clickSocial(bc.getIDPAlias());
+        loginPage.clickSocial(bc.getIDPAlias());
 
         waitForPage(driver, "log in to", true);
 
@@ -88,10 +88,10 @@ public class KcOidcBrokerLoginHintTest extends AbstractBrokerTest {
                 driver.getCurrentUrl().contains("/auth/realms/" + bc.providerRealmName() + "/"));
 
         Assert.assertTrue("User identifiant should be fullfilled",
-                accountLoginPage.getUsername().equalsIgnoreCase(USER_EMAIL));
+                loginPage.getUsername().equalsIgnoreCase(USER_EMAIL));
         
         log.debug("Logging in");
-        accountLoginPage.login(bc.getUserPassword());
+        loginPage.login(bc.getUserPassword());
 
         waitForPage(driver, "update account information", false);
 
@@ -136,7 +136,7 @@ public class KcOidcBrokerLoginHintTest extends AbstractBrokerTest {
             driver.navigate().to(driver.getCurrentUrl() + "&login_hint=" + USER_EMAIL + "&kc_idp_hint=" + IDP_OIDC_ALIAS);
             waitForPageToLoad();
 
-            accountLoginPage.login(bc.getUserPassword());
+            loginPage.login(bc.getUserPassword());
 
             updateAccountInformationPage.assertCurrent();
             updateAccountInformationPage.updateAccountInformation(bc.getUserLogin(), bc.getUserEmail(), "Firstname", "Lastname");
@@ -144,7 +144,7 @@ public class KcOidcBrokerLoginHintTest extends AbstractBrokerTest {
             idpConfirmLinkPage.assertCurrent();
             idpConfirmLinkPage.clickLinkAccount();
 
-            accountLoginPage.login(bc.getUserPassword());
+            loginPage.login(bc.getUserPassword());
             accountPage.isCurrent();
         }
     }

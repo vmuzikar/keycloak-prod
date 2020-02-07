@@ -537,19 +537,20 @@ public class BrokerLinkAndTokenExchangeTest extends AbstractServletsAdapterTest 
                                     .param(OAuth2Constants.SUBJECT_TOKEN, accessToken)
                                     .param(OAuth2Constants.SUBJECT_TOKEN_TYPE, OAuth2Constants.JWT_TOKEN_TYPE)
                                     .param(OAuth2Constants.SUBJECT_ISSUER, PARENT_IDP)
+                                    .param(OAuth2Constants.SCOPE, OAuth2Constants.SCOPE_OPENID)
 
                     ));
             Assert.assertEquals(200, response.getStatus());
             AccessTokenResponse tokenResponse = response.readEntity(AccessTokenResponse.class);
-            String exchangedAccessToken = tokenResponse.getToken();
-            Assert.assertNotNull(exchangedAccessToken);
+            String idToken = tokenResponse.getIdToken();
+            Assert.assertNotNull(idToken);
             response.close();
 
             Assert.assertEquals(1, adminClient.realm(CHILD_IDP).getClientSessionStats().size());
 
             // test logout
             response = childLogoutWebTarget(httpClient)
-                    .queryParam("id_token_hint", exchangedAccessToken)
+                    .queryParam("id_token_hint", idToken)
                     .request()
                     .get();
             response.close();
@@ -581,11 +582,12 @@ public class BrokerLinkAndTokenExchangeTest extends AbstractServletsAdapterTest 
                                     .param(OAuth2Constants.SUBJECT_TOKEN, accessToken)
                                     .param(OAuth2Constants.SUBJECT_TOKEN_TYPE, OAuth2Constants.JWT_TOKEN_TYPE)
                                     .param(OAuth2Constants.SUBJECT_ISSUER, PARENT_IDP)
+                                    .param(OAuth2Constants.SCOPE, OAuth2Constants.SCOPE_OPENID)
 
                     ));
             Assert.assertEquals(200, response.getStatus());
             AccessTokenResponse tokenResponse = response.readEntity(AccessTokenResponse.class);
-            String exchangedAccessToken = tokenResponse.getToken();
+            String idToken = tokenResponse.getIdToken();
             JWSInput jws = new JWSInput(tokenResponse.getToken());
             AccessToken token = jws.readJsonContent(AccessToken.class);
             response.close();
@@ -617,7 +619,7 @@ public class BrokerLinkAndTokenExchangeTest extends AbstractServletsAdapterTest 
 
             // test logout
             response = childLogoutWebTarget(httpClient)
-                    .queryParam("id_token_hint", exchangedAccessToken)
+                    .queryParam("id_token_hint", idToken)
                     .request()
                     .get();
             response.close();
@@ -638,11 +640,12 @@ public class BrokerLinkAndTokenExchangeTest extends AbstractServletsAdapterTest 
                                     .param(OAuth2Constants.SUBJECT_TOKEN, accessToken)
                                     .param(OAuth2Constants.SUBJECT_TOKEN_TYPE, OAuth2Constants.JWT_TOKEN_TYPE)
                                     .param(OAuth2Constants.SUBJECT_ISSUER, PARENT_IDP)
+                                    .param(OAuth2Constants.SCOPE, OAuth2Constants.SCOPE_OPENID)
 
                     ));
             Assert.assertEquals(200, response.getStatus());
             AccessTokenResponse tokenResponse = response.readEntity(AccessTokenResponse.class);
-            String exchangedAccessToken = tokenResponse.getToken();
+            String idToken = tokenResponse.getIdToken();
             JWSInput jws = new JWSInput(tokenResponse.getToken());
             AccessToken token = jws.readJsonContent(AccessToken.class);
             response.close();
@@ -657,7 +660,7 @@ public class BrokerLinkAndTokenExchangeTest extends AbstractServletsAdapterTest 
 
             // test logout
             response = childLogoutWebTarget(httpClient)
-                    .queryParam("id_token_hint", exchangedAccessToken)
+                    .queryParam("id_token_hint", idToken)
                     .request()
                     .get();
             response.close();
@@ -677,11 +680,12 @@ public class BrokerLinkAndTokenExchangeTest extends AbstractServletsAdapterTest 
                                     .param(OAuth2Constants.GRANT_TYPE, OAuth2Constants.TOKEN_EXCHANGE_GRANT_TYPE)
                                     .param(OAuth2Constants.SUBJECT_TOKEN, accessToken)
                                     .param(OAuth2Constants.SUBJECT_TOKEN_TYPE, OAuth2Constants.JWT_TOKEN_TYPE)
+                                    .param(OAuth2Constants.SCOPE, OAuth2Constants.SCOPE_OPENID)
 
                     ));
             Assert.assertEquals(200, response.getStatus());
             AccessTokenResponse tokenResponse = response.readEntity(AccessTokenResponse.class);
-            String exchangedAccessToken = tokenResponse.getToken();
+            String idToken = tokenResponse.getIdToken();
             JWSInput jws = new JWSInput(tokenResponse.getToken());
             AccessToken token = jws.readJsonContent(AccessToken.class);
             response.close();
@@ -696,7 +700,7 @@ public class BrokerLinkAndTokenExchangeTest extends AbstractServletsAdapterTest 
 
             // test logout
             response = childLogoutWebTarget(httpClient)
-                    .queryParam("id_token_hint", exchangedAccessToken)
+                    .queryParam("id_token_hint", idToken)
                     .request()
                     .get();
             response.close();

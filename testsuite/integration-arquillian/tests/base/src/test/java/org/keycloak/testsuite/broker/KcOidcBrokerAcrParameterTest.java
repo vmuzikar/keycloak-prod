@@ -53,7 +53,7 @@ public class KcOidcBrokerAcrParameterTest extends AbstractBrokerTest {
         driver.navigate().to(driver.getCurrentUrl() + "&" + ACR_VALUES + "=" + ACR_3);
 
         log.debug("Clicking social " + bc.getIDPAlias());
-        accountLoginPage.clickSocial(bc.getIDPAlias());
+        loginPage.clickSocial(bc.getIDPAlias());
 
         waitForPage(driver, "log in to", true);
 
@@ -64,7 +64,7 @@ public class KcOidcBrokerAcrParameterTest extends AbstractBrokerTest {
                 driver.getCurrentUrl().contains(ACR_VALUES + "=" + ACR_3));
 
         log.debug("Logging in");
-        accountLoginPage.login(bc.getUserLogin(), bc.getUserPassword());
+        loginPage.login(bc.getUserLogin(), bc.getUserPassword());
 
         waitForPage(driver, "update account information", false);
 
