@@ -618,33 +618,32 @@ public class AuthenticationProcessor {
 
     public void logFailure() {
         if (realm.isBruteForceProtected()) {
-            String username = authenticationSession.getAuthNote(AbstractUsernameFormAuthenticator.ATTEMPTED_USERNAME);
-            // todo need to handle non form failures
-            if (username == null) {
-
-            } else {
-                UserModel user = KeycloakModelUtils.findUserByNameOrEmail(session, realm, username);
-                if (user != null) {
-                    getBruteForceProtector().failedLogin(realm, user, connection);
-                }
+            UserModel user = lookupUserForBruteForceLog();
+            if (user != null) {
+                getBruteForceProtector().failedLogin(realm, user, connection);
             }
         }
     }
 
     protected void logSuccess() {
         if (realm.isBruteForceProtected()) {
-            String username = authenticationSession.getAuthNote(AbstractUsernameFormAuthenticator.ATTEMPTED_USERNAME);
-            // TODO: as above, need to handle non form success
-
-            if(username == null) {
-                return;
-            }
-
-            UserModel user = KeycloakModelUtils.findUserByNameOrEmail(session, realm, username);
+            UserModel user = lookupUserForBruteForceLog();
             if (user != null) {
                 getBruteForceProtector().successfulLogin(realm, user, connection);
             }
         }
+    }
+
+    private UserModel lookupUserForBruteForceLog() {
+        UserModel user = authenticationSession.getAuthenticatedUser();
+        if (user != null) return user;
+
+        String username = authenticationSession.getAuthNote(AbstractUsernameFormAuthenticator.ATTEMPTED_USERNAME);
+        if (username != null) {
+            return KeycloakModelUtils.findUserByNameOrEmail(session, realm, username);
+        }
+
+        return null;
     }
 
     public boolean isSuccessful(AuthenticationExecutionModel model) {

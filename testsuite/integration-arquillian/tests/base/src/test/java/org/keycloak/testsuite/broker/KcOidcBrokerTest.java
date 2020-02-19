@@ -1,32 +1,72 @@
 package org.keycloak.testsuite.broker;
 
+import static org.junit.Assert.assertEquals;
+import static org.keycloak.models.utils.DefaultAuthenticationFlows.IDP_REVIEW_PROFILE_CONFIG_ALIAS;
+import static org.keycloak.testsuite.broker.BrokerRunOnServerUtil.configurePostBrokerLoginWithOTP;
+import static org.keycloak.testsuite.broker.BrokerRunOnServerUtil.disablePostBrokerLoginFlow;
 import static org.keycloak.testsuite.broker.BrokerTestConstants.REALM_PROV_NAME;
 import static org.keycloak.testsuite.broker.BrokerTestTools.getAuthRoot;
 import static org.keycloak.testsuite.broker.BrokerTestTools.waitForPage;
 
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.graphene.page.Page;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Test;
+import org.keycloak.admin.client.resource.AuthenticationManagementResource;
 import org.keycloak.admin.client.resource.ClientsResource;
 import org.keycloak.admin.client.resource.IdentityProviderResource;
 import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.authentication.authenticators.broker.IdpCreateUserIfUniqueAuthenticatorFactory;
 import org.keycloak.broker.oidc.OIDCIdentityProviderConfig;
 import org.keycloak.broker.oidc.mappers.ExternalKeycloakRoleToRoleMapper;
 import org.keycloak.crypto.Algorithm;
+import org.keycloak.models.AuthenticationExecutionModel;
+import org.keycloak.models.utils.DefaultAuthenticationFlows;
+import org.keycloak.models.utils.TimeBasedOTP;
 import org.keycloak.protocol.oidc.OIDCConfigAttributes;
+import org.keycloak.representations.idm.AuthenticationExecutionInfoRepresentation;
+import org.keycloak.representations.idm.AuthenticatorConfigRepresentation;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.IdentityProviderMapperRepresentation;
 import org.keycloak.representations.idm.IdentityProviderRepresentation;
+import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.testsuite.Assert;
+import org.keycloak.testsuite.admin.ApiUtil;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
+import org.keycloak.testsuite.pages.LoginConfigTotpPage;
+import org.keycloak.testsuite.pages.LoginPage;
+import org.keycloak.testsuite.pages.LoginTotpPage;
+import org.keycloak.testsuite.runonserver.RunOnServerDeployment;
 
 @AuthServerContainerExclude(AuthServer.REMOTE)
 public class KcOidcBrokerTest extends AbstractBrokerTest {
+
+    @Deployment
+    public static WebArchive deploy() {
+        return RunOnServerDeployment.create(UserResource.class)
+                .addPackages(true, "org.keycloak.testsuite")
+                .addPackages(true, "org.keycloak.admin.client.resource");
+    }
+
+    @Page
+    protected LoginPage loginPage;
+
+    @Page
+    protected LoginTotpPage loginTotpPage;
+
+    @Page
+    protected LoginConfigTotpPage totpPage;
+
+    protected TimeBasedOTP totp = new TimeBasedOTP();
 
     @Override
     protected BrokerConfiguration getBrokerConfiguration() {
@@ -116,4 +156,102 @@ public class KcOidcBrokerTest extends AbstractBrokerTest {
             clients.get(brokerApp.getId()).update(brokerApp);
         }
     }
+
+
+    // KEYCLOAK-12986
+    @Test
+    public void testPostBrokerLoginFlowWithOTP_bruteForceEnabled() {
+        updateExecutions(KcOidcBrokerTest::disableUpdateProfileOnFirstLogin);
+        testingClient.server(bc.consumerRealmName()).run(configurePostBrokerLoginWithOTP(bc.getIDPAlias()));
+
+        // Enable brute force protector in consumer realm
+        RealmResource realm = adminClient.realm(bc.consumerRealmName());
+        RealmRepresentation consumerRealmRep = realm.toRepresentation();
+        consumerRealmRep.setBruteForceProtected(true);
+        consumerRealmRep.setFailureFactor(2);
+        consumerRealmRep.setMaxDeltaTimeSeconds(20);
+        consumerRealmRep.setMaxFailureWaitSeconds(100);
+        consumerRealmRep.setWaitIncrementSeconds(5);
+        realm.update(consumerRealmRep);
+
+        try {
+            driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+
+            logInWithBroker(bc);
+
+            totpPage.assertCurrent();
+            String totpSecret = totpPage.getTotpSecret();
+            totpPage.configure(totp.generateTOTP(totpSecret));
+            assertNumFederatedIdentities(realm.users().search(bc.getUserLogin()).get(0).getId(), 1);
+            logoutFromRealm(bc.consumerRealmName());
+
+            logInWithBroker(bc);
+
+            loginTotpPage.assertCurrent();
+
+            // Login for 2 times with incorrect TOTP. This should temporarily disable the user
+            loginTotpPage.login("bad-totp");
+            Assert.assertEquals("Invalid authenticator code.", loginTotpPage.getError());
+
+            loginTotpPage.login("bad-totp");
+            Assert.assertEquals("Invalid authenticator code.", loginTotpPage.getError());
+
+            // Login with valid TOTP. I should not be able to login
+            loginTotpPage.login(totp.generateTOTP(totpSecret));
+            Assert.assertEquals("Invalid authenticator code.", loginTotpPage.getError());
+
+            // Clear login failures
+            String userId = ApiUtil.findUserByUsername(realm, bc.getUserLogin()).getId();
+            realm.attackDetection().clearBruteForceForUser(userId);
+
+            loginTotpPage.login(totp.generateTOTP(totpSecret));
+            waitForAccountManagementTitle();
+            logoutFromRealm(bc.consumerRealmName());
+        } finally {
+            testingClient.server(bc.consumerRealmName()).run(disablePostBrokerLoginFlow(bc.getIDPAlias()));
+
+            // Disable brute force protector
+            consumerRealmRep = realm.toRepresentation();
+            consumerRealmRep.setBruteForceProtected(false);
+            realm.update(consumerRealmRep);
+        }
+    }
+
+    private void updateExecutions(BiConsumer<AuthenticationExecutionInfoRepresentation, AuthenticationManagementResource> action) {
+        AuthenticationManagementResource flows = adminClient.realm(bc.consumerRealmName()).flows();
+
+        for (AuthenticationExecutionInfoRepresentation execution : flows.getExecutions(DefaultAuthenticationFlows.FIRST_BROKER_LOGIN_FLOW)) {
+            action.accept(execution, flows);
+        }
+    }
+
+    private static void disableUpdateProfileOnFirstLogin(AuthenticationExecutionInfoRepresentation execution, AuthenticationManagementResource flows) {
+        if (execution.getProviderId() != null && execution.getProviderId().equals(IdpCreateUserIfUniqueAuthenticatorFactory.PROVIDER_ID)) {
+            execution.setRequirement(AuthenticationExecutionModel.Requirement.ALTERNATIVE.name());
+            flows.updateExecutions(DefaultAuthenticationFlows.FIRST_BROKER_LOGIN_FLOW, execution);
+        } else if (execution.getAlias() != null && execution.getAlias().equals(IDP_REVIEW_PROFILE_CONFIG_ALIAS)) {
+            AuthenticatorConfigRepresentation config = flows.getAuthenticatorConfig(execution.getAuthenticationConfig());
+            config.getConfig().put("update.profile.on.first.login", IdentityProviderRepresentation.UPFLM_OFF);
+            flows.updateAuthenticatorConfig(config.getId(), config);
+        }
+    }
+
+    private void logInWithBroker(BrokerConfiguration bc) {
+        log.debug("Clicking social " + bc.getIDPAlias());
+        loginPage.clickSocial(bc.getIDPAlias());
+        waitForPage(driver, "log in to", true);
+        log.debug("Logging in");
+        loginPage.login(bc.getUserLogin(), bc.getUserPassword());
+    }
+
+    private void assertNumFederatedIdentities(String userId, int expected) {
+        assertEquals(expected, adminClient.realm(bc.consumerRealmName()).users().get(userId).getFederatedIdentity().size());
+    }
+
+    private void waitForAccountManagementTitle() {
+        boolean isProduct = adminClient.serverInfo().getInfo().getProfileInfo().getName().equals("product");
+        String title = isProduct ? "rh-sso account management" : "keycloak account management";
+        waitForPage(driver, title, true);
+    }
+
 }
