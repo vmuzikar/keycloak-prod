@@ -19,7 +19,7 @@ env:
     - TESTS=crossdc-adapter
 
 jdk:
-  - oraclejdk8
+  - openjdk8
 
 install: true
 
