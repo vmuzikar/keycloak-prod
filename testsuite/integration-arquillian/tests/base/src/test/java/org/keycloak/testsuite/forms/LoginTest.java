@@ -45,6 +45,10 @@ import org.keycloak.testsuite.pages.AppPage.RequestType;
 import org.keycloak.testsuite.pages.ErrorPage;
 import org.keycloak.testsuite.pages.LoginPage;
 import org.keycloak.testsuite.pages.LoginPasswordUpdatePage;
+import org.keycloak.testsuite.updaters.RealmAttributeUpdater;
+import org.keycloak.testsuite.util.ContainerAssume;
+import org.keycloak.testsuite.util.DroneUtils;
+import org.keycloak.testsuite.util.JavascriptBrowser;
 import org.keycloak.testsuite.util.OAuthClient;
 import org.keycloak.testsuite.util.Matchers;
 import org.keycloak.testsuite.util.RealmBuilder;
@@ -382,6 +386,8 @@ public class LoginTest extends AbstractTestRealmKeycloakTest {
 
     @Test
     public void loginSuccessRealmSigningAlgorithms() throws JWSInputException {
+        ContainerAssume.assumeAuthServerSSL();
+
         loginPage.open();
         loginPage.login("login-test", "password");
 

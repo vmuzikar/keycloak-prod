@@ -3,6 +3,7 @@ package org.keycloak.testsuite.adapter.servlet;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.graphene.page.Page;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.testsuite.adapter.AbstractServletsAdapterTest;
@@ -10,6 +11,7 @@ import org.keycloak.testsuite.adapter.page.Employee2Servlet;
 import org.keycloak.testsuite.arquillian.annotation.AppServerContainer;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.updaters.ClientAttributeUpdater;
+import org.keycloak.testsuite.util.ContainerAssume;
 import org.keycloak.testsuite.utils.arquillian.ContainerConstants;
 import org.keycloak.testsuite.utils.io.IOUtil;
 import org.openqa.selenium.By;
@@ -56,6 +58,11 @@ public class SAMLSameSiteTest extends AbstractServletsAdapterTest {
     public void setDefaultPageUriParameters() {
         super.setDefaultPageUriParameters();
         testRealmSAMLPostLoginPage.setAuthRealm(SAMLSERVLETDEMO);
+    }
+
+    @BeforeClass
+    public static void enabledOnlyWithSSL() {
+        ContainerAssume.assumeAuthServerSSL();
     }
 
     @Test
