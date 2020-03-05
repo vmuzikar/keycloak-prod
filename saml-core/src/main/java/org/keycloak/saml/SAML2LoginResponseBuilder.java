@@ -200,13 +200,13 @@ public class SAML2LoginResponseBuilder implements SamlProtocolExtensionsAwareBui
         //Update Conditions NotOnOrAfter
         if(assertionExpiration > 0) {
             ConditionsType conditions = assertion.getConditions();
-            conditions.setNotOnOrAfter(XMLTimeUtil.add(conditions.getNotBefore(), assertionExpiration * 1000));
+            conditions.setNotOnOrAfter(XMLTimeUtil.add(conditions.getNotBefore(), assertionExpiration * 1000L));
         }
 
         //Update SubjectConfirmationData NotOnOrAfter
         if(subjectExpiration > 0) {
             SubjectConfirmationDataType subjectConfirmationData = assertion.getSubject().getConfirmation().get(0).getSubjectConfirmationData();
-            subjectConfirmationData.setNotOnOrAfter(XMLTimeUtil.add(assertion.getConditions().getNotBefore(), subjectExpiration * 1000));
+            subjectConfirmationData.setNotOnOrAfter(XMLTimeUtil.add(assertion.getConditions().getNotBefore(), subjectExpiration * 1000L));
         }
 
         // Create an AuthnStatementType
