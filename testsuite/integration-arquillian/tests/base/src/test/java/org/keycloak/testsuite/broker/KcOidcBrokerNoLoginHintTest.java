@@ -8,8 +8,13 @@ import static org.keycloak.testsuite.broker.BrokerTestConstants.IDP_OIDC_PROVIDE
 import static org.keycloak.testsuite.broker.BrokerTestConstants.USER_EMAIL;
 import static org.keycloak.testsuite.broker.BrokerTestTools.createIdentityProvider;
 import static org.keycloak.testsuite.broker.BrokerTestTools.waitForPage;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.broker.oidc.mappers.ExternalKeycloakRoleToRoleMapper;
+import org.keycloak.representations.idm.IdentityProviderMapperRepresentation;
 import org.keycloak.representations.idm.IdentityProviderRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.testsuite.Assert;
@@ -18,7 +23,7 @@ import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 @AuthServerContainerExclude(AuthServer.REMOTE)
-public class KcOidcBrokerNoLoginHintTest extends KcOidcBrokerLoginHintTest {
+public class KcOidcBrokerNoLoginHintTest extends AbstractBrokerTest {
 
     @Override
     protected BrokerConfiguration getBrokerConfiguration() {
@@ -36,6 +41,27 @@ public class KcOidcBrokerNoLoginHintTest extends KcOidcBrokerLoginHintTest {
             config.put("loginHint", "false");
             return idp;
         }
+    }
+
+    @Override
+    protected Iterable<IdentityProviderMapperRepresentation> createIdentityProviderMappers() {
+        IdentityProviderMapperRepresentation attrMapper1 = new IdentityProviderMapperRepresentation();
+        attrMapper1.setName("manager-role-mapper");
+        attrMapper1.setIdentityProviderMapper(ExternalKeycloakRoleToRoleMapper.PROVIDER_ID);
+        attrMapper1.setConfig(ImmutableMap.<String,String>builder()
+                .put("external.role", "manager")
+                .put("role", "manager")
+                .build());
+
+        IdentityProviderMapperRepresentation attrMapper2 = new IdentityProviderMapperRepresentation();
+        attrMapper2.setName("user-role-mapper");
+        attrMapper2.setIdentityProviderMapper(ExternalKeycloakRoleToRoleMapper.PROVIDER_ID);
+        attrMapper2.setConfig(ImmutableMap.<String,String>builder()
+                .put("external.role", "user")
+                .put("role", "user")
+                .build());
+
+        return Lists.newArrayList(attrMapper1, attrMapper2);
     }
 
     @Override

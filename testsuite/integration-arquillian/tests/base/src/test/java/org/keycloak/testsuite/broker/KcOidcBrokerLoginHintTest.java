@@ -8,6 +8,10 @@ import static org.keycloak.testsuite.broker.BrokerTestConstants.IDP_OIDC_PROVIDE
 import static org.keycloak.testsuite.broker.BrokerTestConstants.USER_EMAIL;
 import static org.keycloak.testsuite.broker.BrokerTestTools.createIdentityProvider;
 import static org.keycloak.testsuite.broker.BrokerTestTools.waitForPage;
+import static org.keycloak.testsuite.util.WaitUtils.waitForPageToLoad;
+
+import org.junit.Test;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.broker.oidc.mappers.ExternalKeycloakRoleToRoleMapper;
 import org.keycloak.representations.idm.IdentityProviderMapperRepresentation;
@@ -19,6 +23,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
+import org.keycloak.testsuite.updaters.Creator;
+import org.keycloak.testsuite.util.UserBuilder;
 
 @AuthServerContainerExclude(AuthServer.REMOTE)
 public class KcOidcBrokerLoginHintTest extends AbstractBrokerTest {
@@ -113,5 +119,33 @@ public class KcOidcBrokerLoginHintTest extends AbstractBrokerTest {
 
         Assert.assertTrue("There must be user " + bc.getUserLogin() + " in realm " + bc.consumerRealmName(),
                 isUserFound);
+    }
+
+    @Test
+    public void loginHintWithExistingUser() {
+        try (Creator<UserResource> c = Creator.create(adminClient.realm(bc.consumerRealmName()),
+                UserBuilder.create()
+                        .username(bc.getUserLogin())
+                        .password(bc.getUserPassword())
+                        .email(bc.getUserEmail())
+                        .enabled(true)
+                        .build()
+            )) {
+            driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+            waitForPageToLoad();
+            driver.navigate().to(driver.getCurrentUrl() + "&login_hint=" + USER_EMAIL + "&kc_idp_hint=" + IDP_OIDC_ALIAS);
+            waitForPageToLoad();
+
+            accountLoginPage.login(bc.getUserPassword());
+
+            updateAccountInformationPage.assertCurrent();
+            updateAccountInformationPage.updateAccountInformation(bc.getUserLogin(), bc.getUserEmail(), "Firstname", "Lastname");
+
+            idpConfirmLinkPage.assertCurrent();
+            idpConfirmLinkPage.clickLinkAccount();
+
+            accountLoginPage.login(bc.getUserPassword());
+            accountPage.isCurrent();
+        }
     }
 }
