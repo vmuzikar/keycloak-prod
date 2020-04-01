@@ -97,6 +97,8 @@ public class DefaultAuthenticationFlow implements AuthenticationFlow {
                 Response flowChallenge = null;
                 try {
                     flowChallenge = authenticationFlow.processAction(actionExecution);
+                } catch (ForkFlowException ffe) {
+                    throw ffe;
                 } catch (AuthenticationFlowException afe) {
                     if (model.isAlternative()) {
                         logger.debug("Thrown exception in alternative Subflow. Ignoring Subflow");
