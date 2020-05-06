@@ -54,23 +54,33 @@ cp "$tempfile" "$xml"
 
 echo "==> Downloading license files for $xml into $output_dir" >&2
 
-xmlstarlet sel -T -t -m "/licenseSummary/dependencies/dependency/licenses/license" -v "../../groupId/text()" -o $'\t' -v "../../artifactId/text()" -o $'\t' -v "../../version/text()" -o $'\t' -v "name/text()" -o $'\t' -v "url/text()" --nl "$xml" | \
 while IFS=$'\t' read -r -d $'\n' groupid artifactid version name url
 do
     # Windows won't like it if : is used as a separator
     filename="$groupid,$artifactid,$version,$name.txt"
     echo "$filename"
-    curl -LsS -o "$output_dir/$filename" "$url"
-done
+    curl -fLsS -o "$output_dir/$filename" "$url"
+done < <(xmlstarlet sel -T -t \
+    -m "/licenseSummary/dependencies/dependency/licenses/license" \
+    -v "../../groupId/text()" -o $'\t' \
+    -v "../../artifactId/text()" -o $'\t' \
+    -v "../../version/text()" -o $'\t' \
+    -v "name/text()" -o $'\t' \
+    -v "url/text()" --nl \
+    "$xml")
 
-xmlstarlet sel -T -t -m "/licenseSummary/others/other/licenses/license" -v "../../description/text()" -o $'\t' -v "name/text()" -o $'\t' -v "url/text()" --nl "$xml" | \
 while IFS=$'\t' read -r -d $'\n' description name url
 do
     # Windows won't like it if : is used as a separator
     filename="$description,$name.txt"
     echo "$filename"
-    curl -LsS -o "$output_dir/$filename" "$url"
-done
+    curl -fLsS -o "$output_dir/$filename" "$url"
+done < <(xmlstarlet sel -T -t \
+    -m "/licenseSummary/others/other/licenses/license" \
+    -v "../../description/text()" -o $'\t' \
+    -v "name/text()" -o $'\t' \
+    -v "url/text()" --nl \
+    "$xml")
 
 echo "==> Normalizing license line endings" >&2
 
