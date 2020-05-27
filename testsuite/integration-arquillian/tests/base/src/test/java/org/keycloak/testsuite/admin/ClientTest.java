@@ -105,37 +105,36 @@ public class ClientTest extends AbstractAdminTest {
 
     @Test
     public void createClientValidation() {
+        this.createClientValidation("invalid");
+    }
+
+    @Test
+    public void createClientDataUrlValidation() {
+        this.createClientValidation("data:text/html;base64,PHNjcmlwdD5jb25maXJtKGRvY3VtZW50LmRvbWFpbik7PC9zY3JpcHQ+");
+    }
+
+    @Test
+    public void updateClientValidation() {
+        this.updateClientValidation("invalid");
+    }
+
+    @Test
+    public void updateClientDataUrlValidation() {
+        this.updateClientValidation("data:text/html;base64,PHNjcmlwdD5jb25maXJtKGRvY3VtZW50LmRvbWFpbik7PC9zY3JpcHQ+");
+    }
+
+    private void createClientValidation(final String testUrl) {
         ClientRepresentation rep = new ClientRepresentation();
         rep.setClientId("my-app");
         rep.setDescription("my-app description");
         rep.setEnabled(true);
 
-        rep.setRootUrl("invalid");
+        rep.setRootUrl(testUrl);
         createClientExpectingValidationError(rep, "Invalid URL in rootUrl");
 
         rep.setRootUrl(null);
-        rep.setBaseUrl("invalid");
+        rep.setBaseUrl(testUrl);
         createClientExpectingValidationError(rep, "Invalid URL in baseUrl");
-    }
-
-    @Test
-    public void updateClientValidation() {
-        ClientRepresentation rep = createClient();
-
-        rep.setClientId("my-app");
-        rep.setDescription("my-app description");
-        rep.setEnabled(true);
-
-        rep.setRootUrl("invalid");
-        updateClientExpectingValidationError(rep, "Invalid URL in rootUrl");
-
-        rep.setRootUrl(null);
-        rep.setBaseUrl("invalid");
-        updateClientExpectingValidationError(rep, "Invalid URL in baseUrl");
-
-        ClientRepresentation stored = realm.clients().get(rep.getId()).toRepresentation();
-        assertNull(stored.getRootUrl());
-        assertNull(stored.getBaseUrl());
     }
 
     private void createClientExpectingValidationError(ClientRepresentation rep, String expectedError) {
@@ -147,8 +146,26 @@ public class ClientTest extends AbstractAdminTest {
         assertEquals(expectedError, error.getErrorDescription());
 
         assertNull(response.getLocation());
-
         response.close();
+    }
+
+    private void updateClientValidation(final String testUrl) {
+        ClientRepresentation rep = createClient();
+
+        rep.setClientId("my-app");
+        rep.setDescription("my-app description");
+        rep.setEnabled(true);
+
+        rep.setRootUrl(testUrl);
+        updateClientExpectingValidationError(rep, "Invalid URL in rootUrl");
+
+        rep.setRootUrl(null);
+        rep.setBaseUrl(testUrl);
+        updateClientExpectingValidationError(rep, "Invalid URL in baseUrl");
+
+        ClientRepresentation stored = realm.clients().get(rep.getId()).toRepresentation();
+        assertNull(stored.getRootUrl());
+        assertNull(stored.getBaseUrl());
     }
 
     private void updateClientExpectingValidationError(ClientRepresentation rep, String expectedError) {

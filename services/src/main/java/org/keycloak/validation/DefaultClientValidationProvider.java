@@ -67,7 +67,7 @@ public class DefaultClientValidationProvider implements ClientValidationProvider
         boolean valid = true;
         try {
             URI uri = new URL(url).toURI();
-            if (uri.getScheme() == null || uri.getScheme().isEmpty()) {
+            if (uri.getScheme() == null || uri.getScheme().isEmpty() || uri.getScheme().equals("data")) {
                 valid = false;
             }
         } catch (MalformedURLException | URISyntaxException e) {

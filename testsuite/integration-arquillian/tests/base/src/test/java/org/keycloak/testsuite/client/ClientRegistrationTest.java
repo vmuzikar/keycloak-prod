@@ -162,11 +162,19 @@ public class ClientRegistrationTest extends AbstractClientRegistrationTest {
 
     @Test
     public void registerClientValidation() throws IOException {
-    	authCreateClients();
-    	ClientRepresentation client = buildClient();
-    	client.setRootUrl("invalid");
+        this.registerClientExpectingValidationError("invalid");
+    }
 
-    	try {
+    @Test
+    public void registerClientDataUrlValidation() throws IOException {
+        this.registerClientExpectingValidationError("data:text/html;base64,PHNjcmlwdD5jb25maXJtKGRvY3VtZW50LmRvbWFpbik7PC9zY3JpcHQ+");
+    }
+
+    private void registerClientExpectingValidationError(final String rootUrl) throws IOException {
+        authCreateClients();
+        ClientRepresentation client = buildClient();
+        client.setRootUrl(rootUrl);
+        try {
             registerClient(client);
         } catch (ClientRegistrationException e) {
             HttpErrorException c = (HttpErrorException) e.getCause();
@@ -181,12 +189,21 @@ public class ClientRegistrationTest extends AbstractClientRegistrationTest {
 
     @Test
     public void updateClientValidation() throws IOException, ClientRegistrationException {
+        this.updateClientExpectingValidationError("invalid");
+    }
+
+    @Test
+    public void updateClientDataUrlValidation() throws IOException, ClientRegistrationException {
+        this.updateClientExpectingValidationError("data:text/html;base64,PHNjcmlwdD5jb25maXJtKGRvY3VtZW50LmRvbWFpbik7PC9zY3JpcHQ+");
+    }
+
+    private void updateClientExpectingValidationError(final String rootUrl) throws IOException, ClientRegistrationException {
         registerClientAsAdmin();
 
         ClientRepresentation client = reg.get(CLIENT_ID);
-        client.setRootUrl("invalid");
+        client.setRootUrl(rootUrl);
 
-    	try {
+        try {
             reg.update(client);
         } catch (ClientRegistrationException e) {
             HttpErrorException c = (HttpErrorException) e.getCause();
