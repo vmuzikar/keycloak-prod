@@ -13,7 +13,6 @@ import org.keycloak.saml.processing.api.saml.v2.request.SAML2Request;
 import org.keycloak.saml.processing.core.parsers.saml.assertion.SAMLAssertionQNames;
 import org.keycloak.saml.processing.core.parsers.saml.protocol.SAMLProtocolQNames;
 import org.keycloak.saml.processing.core.saml.v2.common.SAMLDocumentHolder;
-import org.keycloak.testsuite.arquillian.SuiteContext;
 
 import org.keycloak.testsuite.saml.AbstractSamlTest;
 import org.keycloak.testsuite.updaters.ClientAttributeUpdater;
@@ -52,87 +51,16 @@ import org.w3c.dom.NodeList;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
-import static org.keycloak.testsuite.arquillian.AuthServerTestEnricher.getAuthServerContextRoot;
 import static org.keycloak.testsuite.broker.BrokerTestConstants.*;
+import static org.keycloak.testsuite.broker.BrokerTestTools.getConsumerRoot;
 import static org.keycloak.testsuite.util.Matchers.bodyHC;
 import static org.keycloak.testsuite.util.Matchers.isSamlResponse;
+import static org.keycloak.testsuite.broker.BrokerTestTools.getProviderRoot;
 
 public class KcSamlSignedBrokerTest extends AbstractBrokerTest {
 
     private static final String PRIVATE_KEY = "MIIBVQIBADANBgkqhkiG9w0BAQEFAASCAT8wggE7AgEAAkEAs46ICYPRIkmr8diECmyT59cChTWIEiXYBY3T6OLlZrF8ofVCzbEeoUOmhrtHijxxuKSoqLWP4nNOt3rINtQNBQIDAQABAkBL2nyxuFQTLhhLdPJjDPd2y6gu6ixvrjkSL5ZEHgZXWRHzhTzBT0eRxg/5rJA2NDRMBzTTegaEGkWUt7lF5wDJAiEA5pC+h9NEgqDJSw42I52BOml3II35Z6NlNwl6OMfnD1sCIQDHXUiOIJy4ZcSgv5WGue1KbdNVOT2gop1XzfuyWgtjHwIhAOCjLb9QC3PqC7Tgx8azcnDiyHojWVesTrTsuvQPcAP5AiAkX5OeQrr1NbQTNAEe7IsrmjAFi4T/6stUOsOiPaV4NwIhAJIeyh4foIXIVQ+M4To2koaDFRssxKI9/O72vnZSJ+uA";
     private static final String PUBLIC_KEY = "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALOOiAmD0SJJq/HYhApsk+fXAoU1iBIl2AWN0+ji5WaxfKH1Qs2xHqFDpoa7R4o8cbikqKi1j+JzTrd6yDbUDQUCAwEAAQ==";
-
-    public class KcSamlSignedBrokerConfiguration extends KcSamlBrokerConfiguration {
-
-        @Override
-        public RealmRepresentation createProviderRealm() {
-            RealmRepresentation realm = super.createProviderRealm();
-
-            realm.setPublicKey(REALM_PUBLIC_KEY);
-            realm.setPrivateKey(REALM_PRIVATE_KEY);
-
-            return realm;
-        }
-
-        @Override
-        public RealmRepresentation createConsumerRealm() {
-            RealmRepresentation realm = super.createConsumerRealm();
-
-            realm.setPublicKey(REALM_PUBLIC_KEY);
-            realm.setPrivateKey(REALM_PRIVATE_KEY);
-
-            return realm;
-        }
-
-        @Override
-        public List<ClientRepresentation> createProviderClients(SuiteContext suiteContext) {
-            List<ClientRepresentation> clientRepresentationList = super.createProviderClients(suiteContext);
-
-            String consumerCert = KeyUtils.getActiveKey(adminClient.realm(consumerRealmName()).keys().getKeyMetadata(), Algorithm.RS256).getCertificate();
-            Assert.assertThat(consumerCert, Matchers.notNullValue());
-
-            for (ClientRepresentation client : clientRepresentationList) {
-                client.setClientAuthenticatorType("client-secret");
-                client.setSurrogateAuthRequired(false);
-
-                Map<String, String> attributes = client.getAttributes();
-                if (attributes == null) {
-                    attributes = new HashMap<>();
-                    client.setAttributes(attributes);
-                }
-
-                attributes.put(SamlConfigAttributes.SAML_ASSERTION_SIGNATURE, "true");
-                attributes.put(SamlConfigAttributes.SAML_SERVER_SIGNATURE, "true");
-                attributes.put(SamlConfigAttributes.SAML_CLIENT_SIGNATURE_ATTRIBUTE, "true");
-                attributes.put(SamlConfigAttributes.SAML_SIGNATURE_ALGORITHM, "RSA_SHA256");
-                attributes.put(SamlConfigAttributes.SAML_SIGNING_CERTIFICATE_ATTRIBUTE, consumerCert);
-            }
-
-            return clientRepresentationList;
-        }
-
-        @Override
-        public IdentityProviderRepresentation setUpIdentityProvider(SuiteContext suiteContext) {
-            IdentityProviderRepresentation result = super.setUpIdentityProvider(suiteContext);
-
-            String providerCert = KeyUtils.getActiveKey(adminClient.realm(providerRealmName()).keys().getKeyMetadata(), Algorithm.RS256).getCertificate();
-            Assert.assertThat(providerCert, Matchers.notNullValue());
-
-            Map<String, String> config = result.getConfig();
-
-            config.put(SAMLIdentityProviderConfig.VALIDATE_SIGNATURE, "true");
-            config.put(SAMLIdentityProviderConfig.WANT_ASSERTIONS_SIGNED, "true");
-            config.put(SAMLIdentityProviderConfig.WANT_AUTHN_REQUESTS_SIGNED, "true");
-            config.put(SAMLIdentityProviderConfig.SIGNING_CERTIFICATE_KEY, providerCert);
-
-            return result;
-        }
-    }
-
-    @Override
-    protected BrokerConfiguration getBrokerConfiguration() {
-        return new KcSamlSignedBrokerConfiguration();
-    }
 
     public void withSignedEncryptedAssertions(Runnable testBody, boolean signedDocument, boolean signedAssertion, boolean encryptedAssertion) throws Exception {
         String providerCert = KeyUtils.getActiveKey(adminClient.realm(bc.providerRealmName()).keys().getKeyMetadata(), Algorithm.RS256).getCertificate();
@@ -149,7 +77,7 @@ public class KcSamlSignedBrokerTest extends AbstractBrokerTest {
             .setAttribute(SAMLIdentityProviderConfig.ENCRYPTION_PUBLIC_KEY, PUBLIC_KEY)
             .setAttribute(SAMLIdentityProviderConfig.SIGNING_CERTIFICATE_KEY, providerCert)
             .update();
-          Closeable clientUpdater = ClientAttributeUpdater.forClient(adminClient, bc.providerRealmName(), bc.getIDPClientIdInProviderRealm(suiteContext))
+          Closeable clientUpdater = ClientAttributeUpdater.forClient(adminClient, bc.providerRealmName(), bc.getIDPClientIdInProviderRealm())
             .setAttribute(SamlConfigAttributes.SAML_ENCRYPT, Boolean.toString(encryptedAssertion))
             .setAttribute(SamlConfigAttributes.SAML_ENCRYPTION_CERTIFICATE_ATTRIBUTE, consumerCert)
             .setAttribute(SamlConfigAttributes.SAML_SERVER_SIGNATURE, Boolean.toString(signedDocument))
@@ -160,6 +88,43 @@ public class KcSamlSignedBrokerTest extends AbstractBrokerTest {
         {
             testBody.run();
         }
+    }
+
+    @Override
+    protected BrokerConfiguration getBrokerConfiguration() {
+        return new KcSamlSignedBrokerConfiguration();
+    }
+
+    @Test
+    public void testWithExpiredBrokerCertificate() throws Exception {
+        try (Closeable idpUpdater = new IdentityProviderAttributeUpdater(identityProviderResource)
+            .setAttribute(SAMLIdentityProviderConfig.VALIDATE_SIGNATURE, Boolean.toString(true))
+            .setAttribute(SAMLIdentityProviderConfig.WANT_ASSERTIONS_SIGNED, Boolean.toString(true))
+            .setAttribute(SAMLIdentityProviderConfig.WANT_ASSERTIONS_ENCRYPTED, Boolean.toString(false))
+            .setAttribute(SAMLIdentityProviderConfig.WANT_AUTHN_REQUESTS_SIGNED, "true")
+            .setAttribute(SAMLIdentityProviderConfig.SIGNING_CERTIFICATE_KEY, AbstractSamlTest.SAML_CLIENT_SALES_POST_SIG_EXPIRED_CERTIFICATE)
+            .update();
+          Closeable clientUpdater = ClientAttributeUpdater.forClient(adminClient, bc.providerRealmName(), bc.getIDPClientIdInProviderRealm())
+            .setAttribute(SamlConfigAttributes.SAML_ENCRYPT, Boolean.toString(false))
+            .setAttribute(SamlConfigAttributes.SAML_SERVER_SIGNATURE, "true")
+            .setAttribute(SamlConfigAttributes.SAML_ASSERTION_SIGNATURE, Boolean.toString(true))
+            .setAttribute(SamlConfigAttributes.SAML_CLIENT_SIGNATURE_ATTRIBUTE, "false")
+            .update();
+          Closeable realmUpdater = new RealmAttributeUpdater(adminClient.realm(bc.providerRealmName()))
+            .setPublicKey(AbstractSamlTest.SAML_CLIENT_SALES_POST_SIG_EXPIRED_PUBLIC_KEY)
+            .setPrivateKey(AbstractSamlTest.SAML_CLIENT_SALES_POST_SIG_EXPIRED_PRIVATE_KEY)
+            .update())
+        {
+            AuthnRequestType loginRep = SamlClient.createLoginRequestDocument(AbstractSamlTest.SAML_CLIENT_ID_SALES_POST + ".dot/ted", AbstractSamlTest.SAML_ASSERTION_CONSUMER_URL_SALES_POST, null);
+
+            Document doc = SAML2Request.convert(loginRep);
+            new SamlClientBuilder()
+              .authnRequest(getConsumerSamlEndpoint(bc.consumerRealmName()), doc, Binding.POST).build()   // Request to consumer IdP
+              .login().idp(bc.getIDPAlias()).build()
+
+              .assertResponse(org.keycloak.testsuite.util.Matchers.statusCodeIsHC(Status.BAD_REQUEST));
+        }
+
     }
 
     @Test
@@ -177,7 +142,7 @@ public class KcSamlSignedBrokerTest extends AbstractBrokerTest {
         loginUser();
 
         // Logout should fail because logout response is not signed.
-        final String redirectUri = getAccountUrl(bc.providerRealmName());
+        final String redirectUri = getAccountUrl(getProviderRoot(), bc.providerRealmName());
         final String logoutUri = oauth.realm(bc.providerRealmName()).getLogoutUrl().redirectUri(redirectUri).build();
         driver.navigate().to(logoutUri);
 
@@ -230,7 +195,7 @@ public class KcSamlSignedBrokerTest extends AbstractBrokerTest {
     // KEYCLOAK-5581
     @Test
     public void loginUserAllNamespacesInTopElement() {
-        AuthnRequestType loginRep = SamlClient.createLoginRequestDocument(AbstractSamlTest.SAML_CLIENT_ID_SALES_POST, getAuthServerContextRoot() + "/sales-post/saml", null);
+        AuthnRequestType loginRep = SamlClient.createLoginRequestDocument(AbstractSamlTest.SAML_CLIENT_ID_SALES_POST, getConsumerRoot() + "/sales-post/saml", null);
 
         Document doc;
         try {
@@ -240,7 +205,7 @@ public class KcSamlSignedBrokerTest extends AbstractBrokerTest {
         }
 
         SAMLDocumentHolder samlResponse = new SamlClientBuilder()
-          .authnRequest(getAuthServerSamlEndpoint(bc.consumerRealmName()), doc, Binding.POST).build()   // Request to consumer IdP
+          .authnRequest(getConsumerSamlEndpoint(bc.consumerRealmName()), doc, Binding.POST).build()   // Request to consumer IdP
           .login().idp(bc.getIDPAlias()).build()
 
           .processSamlResponse(Binding.POST)    // AuthnRequest to producer IdP
@@ -279,36 +244,35 @@ public class KcSamlSignedBrokerTest extends AbstractBrokerTest {
         withSignedEncryptedAssertions(this::loginUserAllNamespacesInTopElement, false, false, true);
     }
 
-    @Test
-    public void testWithExpiredBrokerCertificate() throws Exception {
-        try (Closeable idpUpdater = new IdentityProviderAttributeUpdater(identityProviderResource)
-            .setAttribute(SAMLIdentityProviderConfig.VALIDATE_SIGNATURE, Boolean.toString(true))
-            .setAttribute(SAMLIdentityProviderConfig.WANT_ASSERTIONS_SIGNED, Boolean.toString(true))
-            .setAttribute(SAMLIdentityProviderConfig.WANT_ASSERTIONS_ENCRYPTED, Boolean.toString(false))
-            .setAttribute(SAMLIdentityProviderConfig.WANT_AUTHN_REQUESTS_SIGNED, "true")
-            .setAttribute(SAMLIdentityProviderConfig.SIGNING_CERTIFICATE_KEY, AbstractSamlTest.SAML_CLIENT_SALES_POST_SIG_EXPIRED_CERTIFICATE)
-            .update();
-          Closeable clientUpdater = ClientAttributeUpdater.forClient(adminClient, bc.providerRealmName(), bc.getIDPClientIdInProviderRealm(suiteContext))
-            .setAttribute(SamlConfigAttributes.SAML_ENCRYPT, Boolean.toString(false))
-            .setAttribute(SamlConfigAttributes.SAML_SERVER_SIGNATURE, "true")
-            .setAttribute(SamlConfigAttributes.SAML_ASSERTION_SIGNATURE, Boolean.toString(true))
-            .setAttribute(SamlConfigAttributes.SAML_CLIENT_SIGNATURE_ATTRIBUTE, "false")
-            .update();
-          Closeable realmUpdater = new RealmAttributeUpdater(adminClient.realm(bc.providerRealmName()))
-            .setPublicKey(AbstractSamlTest.SAML_CLIENT_SALES_POST_SIG_EXPIRED_PUBLIC_KEY)
-            .setPrivateKey(AbstractSamlTest.SAML_CLIENT_SALES_POST_SIG_EXPIRED_PRIVATE_KEY)
-            .update())
-        {
-            AuthnRequestType loginRep = SamlClient.createLoginRequestDocument(AbstractSamlTest.SAML_CLIENT_ID_SALES_POST + ".dot/ted", AbstractSamlTest.SAML_ASSERTION_CONSUMER_URL_SALES_POST, null);
+    private void loginAttackChangeSignature(String description,
+      boolean producerSignDocument, boolean producerSignAssertions, boolean producerEncryptAssertions,
+      Saml2DocumentTransformer tr, boolean shouldSucceed) throws Exception {
+        log.infof("producerSignDocument: %s, producerSignAssertions: %s, producerEncryptAssertions: %s", producerSignDocument, producerSignAssertions, producerEncryptAssertions);
 
-            Document doc = SAML2Request.convert(loginRep);
+        Matcher<HttpResponse> responseFromConsumerMatcher = shouldSucceed
+          ?     bodyHC(containsString("Update Account Information"))
+          : not(bodyHC(containsString("Update Account Information")));
+
+        AuthnRequestType loginRep = SamlClient.createLoginRequestDocument(AbstractSamlTest.SAML_CLIENT_ID_SALES_POST, getConsumerRoot() + "/sales-post/saml", null);
+        Document doc = SAML2Request.convert(loginRep);
+
+        withSignedEncryptedAssertions(() -> {
             new SamlClientBuilder()
-              .authnRequest(getAuthServerSamlEndpoint(bc.consumerRealmName()), doc, Binding.POST).build()   // Request to consumer IdP
+              .authnRequest(getConsumerSamlEndpoint(bc.consumerRealmName()), doc, Binding.POST).build()   // Request to consumer IdP
+
               .login().idp(bc.getIDPAlias()).build()
 
-              .assertResponse(org.keycloak.testsuite.util.Matchers.statusCodeIsHC(Status.BAD_REQUEST));
-        }
+              .processSamlResponse(Binding.POST).build()    // AuthnRequest to producer IdP
 
+              .login().user(bc.getUserLogin(), bc.getUserPassword()).build()
+
+              .processSamlResponse(Binding.POST)    // Response from producer IdP
+                .transformDocument(tr)
+                .build()
+
+              // first-broker flow: if valid request, it displays an update profile page on consumer realm
+              .execute(currentResponse -> assertThat(description, currentResponse, responseFromConsumerMatcher));
+        }, producerSignDocument, producerSignAssertions, producerEncryptAssertions);
     }
 
     @Test
@@ -416,35 +380,71 @@ public class KcSamlSignedBrokerTest extends AbstractBrokerTest {
           this::removeDocumentAndAssertionSignature, validAfterTamperingWithBothDocumentAndAssertionSignature);
     }
 
-    private void loginAttackChangeSignature(String description,
-      boolean producerSignDocument, boolean producerSignAssertions, boolean producerEncryptAssertions,
-      Saml2DocumentTransformer tr, boolean shouldSucceed) throws Exception {
-        log.infof("producerSignDocument: %s, producerSignAssertions: %s, producerEncryptAssertions: %s", producerSignDocument, producerSignAssertions, producerEncryptAssertions);
+    public class KcSamlSignedBrokerConfiguration extends KcSamlBrokerConfiguration {
 
-        Matcher<HttpResponse> responseFromConsumerMatcher = shouldSucceed
-          ?     bodyHC(containsString("Update Account Information"))
-          : not(bodyHC(containsString("Update Account Information")));
+        @Override
+        public RealmRepresentation createProviderRealm() {
+            RealmRepresentation realm = super.createProviderRealm();
 
-        AuthnRequestType loginRep = SamlClient.createLoginRequestDocument(AbstractSamlTest.SAML_CLIENT_ID_SALES_POST, getAuthServerContextRoot() + "/sales-post/saml", null);
-        Document doc = SAML2Request.convert(loginRep);
+            realm.setPublicKey(REALM_PUBLIC_KEY);
+            realm.setPrivateKey(REALM_PRIVATE_KEY);
 
-        withSignedEncryptedAssertions(() -> {
-            new SamlClientBuilder()
-              .authnRequest(getAuthServerSamlEndpoint(bc.consumerRealmName()), doc, Binding.POST).build()   // Request to consumer IdP
+            return realm;
+        }
 
-              .login().idp(bc.getIDPAlias()).build()
+        @Override
+        public RealmRepresentation createConsumerRealm() {
+            RealmRepresentation realm = super.createConsumerRealm();
 
-              .processSamlResponse(Binding.POST).build()    // AuthnRequest to producer IdP
+            realm.setPublicKey(REALM_PUBLIC_KEY);
+            realm.setPrivateKey(REALM_PRIVATE_KEY);
 
-              .login().user(bc.getUserLogin(), bc.getUserPassword()).build()
+            return realm;
+        }
 
-              .processSamlResponse(Binding.POST)    // Response from producer IdP
-                .transformDocument(tr)
-                .build()
+        @Override
+        public List<ClientRepresentation> createProviderClients() {
+            List<ClientRepresentation> clientRepresentationList = super.createProviderClients();
 
-              // first-broker flow: if valid request, it displays an update profile page on consumer realm
-              .execute(currentResponse -> assertThat(description, currentResponse, responseFromConsumerMatcher));
-        }, producerSignDocument, producerSignAssertions, producerEncryptAssertions);
+            String consumerCert = KeyUtils.getActiveKey(adminClient.realm(consumerRealmName()).keys().getKeyMetadata(), Algorithm.RS256).getCertificate();
+            Assert.assertThat(consumerCert, Matchers.notNullValue());
+
+            for (ClientRepresentation client : clientRepresentationList) {
+                client.setClientAuthenticatorType("client-secret");
+                client.setSurrogateAuthRequired(false);
+
+                Map<String, String> attributes = client.getAttributes();
+                if (attributes == null) {
+                    attributes = new HashMap<>();
+                    client.setAttributes(attributes);
+                }
+
+                attributes.put(SamlConfigAttributes.SAML_ASSERTION_SIGNATURE, "true");
+                attributes.put(SamlConfigAttributes.SAML_SERVER_SIGNATURE, "true");
+                attributes.put(SamlConfigAttributes.SAML_CLIENT_SIGNATURE_ATTRIBUTE, "true");
+                attributes.put(SamlConfigAttributes.SAML_SIGNATURE_ALGORITHM, "RSA_SHA256");
+                attributes.put(SamlConfigAttributes.SAML_SIGNING_CERTIFICATE_ATTRIBUTE, consumerCert);
+            }
+
+            return clientRepresentationList;
+        }
+
+        @Override
+        public IdentityProviderRepresentation setUpIdentityProvider() {
+            IdentityProviderRepresentation result = super.setUpIdentityProvider();
+
+            String providerCert = KeyUtils.getActiveKey(adminClient.realm(providerRealmName()).keys().getKeyMetadata(), Algorithm.RS256).getCertificate();
+            Assert.assertThat(providerCert, Matchers.notNullValue());
+
+            Map<String, String> config = result.getConfig();
+
+            config.put(SAMLIdentityProviderConfig.VALIDATE_SIGNATURE, "true");
+            config.put(SAMLIdentityProviderConfig.WANT_ASSERTIONS_SIGNED, "true");
+            config.put(SAMLIdentityProviderConfig.WANT_AUTHN_REQUESTS_SIGNED, "true");
+            config.put(SAMLIdentityProviderConfig.SIGNING_CERTIFICATE_KEY, providerCert);
+
+            return result;
+        }
     }
 
 }

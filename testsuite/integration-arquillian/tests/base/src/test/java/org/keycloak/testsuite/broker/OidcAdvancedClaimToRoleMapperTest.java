@@ -31,6 +31,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.keycloak.testsuite.admin.ApiUtil.createUserAndResetPasswordWithAdminClient;
+import static org.keycloak.testsuite.broker.BrokerTestTools.getConsumerRoot;
 
 /**
  * @author hmlnarik, <a href="mailto:external.benjamin.weimer@bosch-si.com">Benjamin Weimer</a>
@@ -100,7 +101,7 @@ public class OidcAdvancedClaimToRoleMapperTest extends AbstractBaseBrokerTest {
         UserRepresentation user = findUser(bc.consumerRealmName(), bc.getUserLogin(), bc.getUserEmail());
         assertThatRoleHasBeenAssigned(user);
 
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
     }
 
     @Test
@@ -116,7 +117,7 @@ public class OidcAdvancedClaimToRoleMapperTest extends AbstractBaseBrokerTest {
         UserRepresentation user = findUser(bc.consumerRealmName(), bc.getUserLogin(), bc.getUserEmail());
         assertThatRoleHasNotBeenAssigned(user);
 
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
     }
 
     @Test
@@ -132,7 +133,7 @@ public class OidcAdvancedClaimToRoleMapperTest extends AbstractBaseBrokerTest {
         UserRepresentation user = findUser(bc.consumerRealmName(), bc.getUserLogin(), bc.getUserEmail());
         assertThatRoleHasBeenAssigned(user);
 
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
     }
 
     @Test
@@ -148,7 +149,7 @@ public class OidcAdvancedClaimToRoleMapperTest extends AbstractBaseBrokerTest {
         UserRepresentation user = findUser(bc.consumerRealmName(), bc.getUserLogin(), bc.getUserEmail());
         assertThatRoleHasBeenAssigned(user);
 
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
     }
 
 
@@ -165,7 +166,7 @@ public class OidcAdvancedClaimToRoleMapperTest extends AbstractBaseBrokerTest {
         UserRepresentation user = findUser(bc.consumerRealmName(), bc.getUserLogin(), bc.getUserEmail());
         assertThatRoleHasNotBeenAssigned(user);
 
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
     }
 
     @Test
@@ -181,7 +182,7 @@ public class OidcAdvancedClaimToRoleMapperTest extends AbstractBaseBrokerTest {
         UserRepresentation user = findUser(bc.consumerRealmName(), bc.getUserLogin(), bc.getUserEmail());
         assertThatRoleHasBeenAssigned(user);
 
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
 
         // update
         user = findUser(bc.providerRealmName(), bc.getUserLogin(), bc.getUserEmail());
@@ -211,7 +212,7 @@ public class OidcAdvancedClaimToRoleMapperTest extends AbstractBaseBrokerTest {
         UserRepresentation user = findUser(bc.consumerRealmName(), bc.getUserLogin(), bc.getUserEmail());
         assertThatRoleHasBeenAssigned(user);
 
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
 
         // update
         user = findUser(bc.providerRealmName(), bc.getUserLogin(), bc.getUserEmail());
@@ -233,7 +234,7 @@ public class OidcAdvancedClaimToRoleMapperTest extends AbstractBaseBrokerTest {
         log.debug("adding identity provider to realm " + bc.consumerRealmName());
 
         RealmResource realm = adminClient.realm(bc.consumerRealmName());
-        final IdentityProviderRepresentation idp = bc.setUpIdentityProvider(suiteContext);
+        final IdentityProviderRepresentation idp = bc.setUpIdentityProvider();
         Response resp = realm.identityProviders().create(idp);
         resp.close();
 

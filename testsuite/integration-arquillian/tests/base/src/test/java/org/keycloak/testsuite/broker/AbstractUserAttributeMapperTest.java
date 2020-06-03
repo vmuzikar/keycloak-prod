@@ -22,6 +22,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
 import static org.keycloak.testsuite.admin.ApiUtil.*;
+import static org.keycloak.testsuite.broker.BrokerTestTools.getConsumerRoot;
 
 /**
  *
@@ -48,7 +49,7 @@ public abstract class AbstractUserAttributeMapperTest extends AbstractBaseBroker
         log.debug("adding identity provider to realm " + bc.consumerRealmName());
 
         RealmResource realm = adminClient.realm(bc.consumerRealmName());
-        final IdentityProviderRepresentation idp = bc.setUpIdentityProvider(suiteContext);
+        final IdentityProviderRepresentation idp = bc.setUpIdentityProvider();
         Response resp = realm.identityProviders().create(idp);
         resp.close();
 
@@ -136,7 +137,7 @@ public abstract class AbstractUserAttributeMapperTest extends AbstractBaseBroker
 
         assertUserAttributes(initialUserAttributes, userRep);
 
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
 
         // update user in provider realm
         UserRepresentation userRepProvider = findUser(bc.providerRealmName(), bc.getUserLogin(), email);

@@ -9,6 +9,7 @@ import static org.keycloak.testsuite.broker.BrokerTestConstants.USER_EMAIL;
 import static org.keycloak.testsuite.broker.BrokerTestTools.createIdentityProvider;
 import static org.keycloak.testsuite.broker.BrokerTestTools.waitForPage;
 import static org.keycloak.testsuite.util.WaitUtils.waitForPageToLoad;
+import static org.keycloak.testsuite.broker.BrokerTestTools.getConsumerRoot;
 
 import org.junit.Test;
 import org.keycloak.admin.client.resource.UserResource;
@@ -16,7 +17,6 @@ import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.IdentityProviderRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.testsuite.Assert;
-import org.keycloak.testsuite.arquillian.SuiteContext;
 import org.keycloak.testsuite.updaters.Creator;
 import org.keycloak.testsuite.util.UserBuilder;
 
@@ -27,23 +27,10 @@ public class KcOidcBrokerLoginHintTest extends AbstractBrokerTest {
         return new KcOidcBrokerConfigurationWithLoginHint();
     }
     
-    private class KcOidcBrokerConfigurationWithLoginHint extends KcOidcBrokerConfiguration {
-        
-        @Override
-        public IdentityProviderRepresentation setUpIdentityProvider(SuiteContext suiteContext) {
-            IdentityProviderRepresentation idp = createIdentityProvider(IDP_OIDC_ALIAS, IDP_OIDC_PROVIDER_ID);
-
-            Map<String, String> config = idp.getConfig();
-            applyDefaultConfiguration(suiteContext, config);
-            config.put("loginHint", "true");
-            return idp;
-        }
-    }
-
     @Override
     protected void loginUser() {
-        driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
-        
+        driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
+
         driver.navigate().to(driver.getCurrentUrl() + "&login_hint=" + USER_EMAIL);
 
         log.debug("Clicking social " + bc.getIDPAlias());
@@ -56,7 +43,7 @@ public class KcOidcBrokerLoginHintTest extends AbstractBrokerTest {
 
         Assert.assertTrue("User identifiant should be fullfilled",
                 loginPage.getUsername().equalsIgnoreCase(USER_EMAIL));
-        
+
         log.debug("Logging in");
         loginPage.login(bc.getUserPassword());
 
@@ -98,7 +85,7 @@ public class KcOidcBrokerLoginHintTest extends AbstractBrokerTest {
                         .enabled(true)
                         .build()
             )) {
-            driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+            driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
             waitForPageToLoad();
             driver.navigate().to(driver.getCurrentUrl() + "&login_hint=" + USER_EMAIL + "&kc_idp_hint=" + IDP_OIDC_ALIAS);
             waitForPageToLoad();
@@ -113,6 +100,19 @@ public class KcOidcBrokerLoginHintTest extends AbstractBrokerTest {
 
             loginPage.login(bc.getUserPassword());
             accountPage.isCurrent();
+        }
+    }
+
+    private class KcOidcBrokerConfigurationWithLoginHint extends KcOidcBrokerConfiguration {
+
+        @Override
+        public IdentityProviderRepresentation setUpIdentityProvider() {
+            IdentityProviderRepresentation idp = createIdentityProvider(IDP_OIDC_ALIAS, IDP_OIDC_PROVIDER_ID);
+
+            Map<String, String> config = idp.getConfig();
+            applyDefaultConfiguration(config);
+            config.put("loginHint", "true");
+            return idp;
         }
     }
 }

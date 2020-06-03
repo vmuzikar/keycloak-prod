@@ -24,7 +24,6 @@ import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.testsuite.Assert;
-import org.keycloak.testsuite.arquillian.SuiteContext;
 import org.keycloak.testsuite.util.UserBuilder;
 
 import static org.keycloak.testsuite.admin.ApiUtil.createUserWithAdminClient;
@@ -33,6 +32,8 @@ import static org.keycloak.testsuite.broker.BrokerRunOnServerUtil.configurePostB
 import static org.keycloak.testsuite.broker.BrokerTestConstants.CLIENT_ID;
 import static org.keycloak.testsuite.broker.BrokerTestConstants.USER_EMAIL;
 import static org.keycloak.testsuite.broker.BrokerTestTools.waitForPage;
+import static org.keycloak.testsuite.broker.BrokerTestTools.getConsumerRoot;
+import static org.keycloak.testsuite.broker.BrokerTestTools.getProviderRoot;
 
 /**
  * This class tests the propagation of the {@code prompt=none} request parameter to a default IDP (if one has been specified)
@@ -63,7 +64,7 @@ public class KcOidcBrokerPromptNoneRedirectTest extends AbstractInitializedBaseB
         /* now send an auth request to the consumer realm including both the kc_idp_hint (to identify the default provider) and prompt=none.
            The presence of the default provider should cause the request with prompt=none to be propagated to the idp instead of resulting
            in a login required error because the user is not yet authenticated in the consumer realm. */
-        driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+        driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
         waitForPage(driver, "log in to", true);
         String url = driver.getCurrentUrl() + "&kc_idp_hint=" + bc.getIDPAlias() + "&prompt=none";
         driver.navigate().to(url);
@@ -77,8 +78,8 @@ public class KcOidcBrokerPromptNoneRedirectTest extends AbstractInitializedBaseB
         /* let's try logging out from the consumer realm and then send an auth request with only prompt=none. The absence of a default idp
            should result in a login required error because the user is not authenticated in the consumer realm and the request won't be propagated
            all the way to the idp where the user is authenticated. */
-        logoutFromRealm(bc.consumerRealmName(), bc.getIDPAlias());
-        driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName(), bc.getIDPAlias());
+        driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
         waitForPage(driver, "log in to", true);
         url = driver.getCurrentUrl() + "&prompt=none";
         driver.navigate().to(url);
@@ -96,7 +97,7 @@ public class KcOidcBrokerPromptNoneRedirectTest extends AbstractInitializedBaseB
         /* try sending an auth request to the consumer realm with prompt=none. As we have no user authenticated in both
            the consumer realm and the IDP, the IDP should return an error=login_required to the broker and the broker must
            in turn return the same error to the client. */
-        driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+        driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
         waitForPage(driver, "log in to", true);
         String url = driver.getCurrentUrl() + "&prompt=none&kc_idp_hint=" + bc.getIDPAlias();
         driver.navigate().to(url);
@@ -198,7 +199,7 @@ public class KcOidcBrokerPromptNoneRedirectTest extends AbstractInitializedBaseB
         authenticateDirectlyInIDP();
 
         /* send an auth request to the consumer realm with prompt=none and a default provider. */
-        driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+        driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
         waitForPage(driver, "log in to", true);
         String url = driver.getCurrentUrl() + "&kc_idp_hint=" + bc.getIDPAlias() + "&prompt=none";
         driver.navigate().to(url);
@@ -209,7 +210,7 @@ public class KcOidcBrokerPromptNoneRedirectTest extends AbstractInitializedBaseB
      * Authenticates the broker user directly in the IDP to establish a valid authenticated session there.
      */
     protected void authenticateDirectlyInIDP() {
-        driver.navigate().to(getAccountUrl(bc.providerRealmName()));
+        driver.navigate().to(getAccountUrl(getProviderRoot(), bc.providerRealmName()));
         waitForPage(driver, "log in to", true);
         Assert.assertTrue("Driver should be on the provider realm page right now",
                 driver.getCurrentUrl().contains("/auth/realms/" + bc.providerRealmName() + "/"));
@@ -226,8 +227,8 @@ public class KcOidcBrokerPromptNoneRedirectTest extends AbstractInitializedBaseB
          * Override the default configuration to unset the {@code prompt} parameter and specify that the IDP accepts forwarded
          * auth requests with {@code prompt=none}.
          */
-        protected void applyDefaultConfiguration(final SuiteContext suiteContext, final Map<String, String> config) {
-            super.applyDefaultConfiguration(suiteContext, config);
+        protected void applyDefaultConfiguration(final Map<String, String> config) {
+            super.applyDefaultConfiguration(config);
             config.remove("prompt");
             config.put("acceptsPromptNoneForwardFromClient", "true");
         }

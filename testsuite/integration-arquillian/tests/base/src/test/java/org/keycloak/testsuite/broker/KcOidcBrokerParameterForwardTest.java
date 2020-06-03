@@ -6,6 +6,7 @@ import static org.keycloak.testsuite.broker.BrokerTestConstants.IDP_OIDC_ALIAS;
 import static org.keycloak.testsuite.broker.BrokerTestConstants.IDP_OIDC_PROVIDER_ID;
 import static org.keycloak.testsuite.broker.BrokerTestTools.createIdentityProvider;
 import static org.keycloak.testsuite.broker.BrokerTestTools.waitForPage;
+import static org.keycloak.testsuite.broker.BrokerTestTools.getConsumerRoot;
 
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,6 @@ import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.IdentityProviderRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.testsuite.Assert;
-import org.keycloak.testsuite.arquillian.SuiteContext;
 
 public class KcOidcBrokerParameterForwardTest extends AbstractBrokerTest {
 
@@ -28,21 +28,9 @@ public class KcOidcBrokerParameterForwardTest extends AbstractBrokerTest {
         return new KcOidcBrokerConfigurationWithParameterForward();
     }
 
-    private class KcOidcBrokerConfigurationWithParameterForward extends KcOidcBrokerConfiguration {
-
-        @Override
-        public IdentityProviderRepresentation setUpIdentityProvider(SuiteContext suiteContext) {
-            IdentityProviderRepresentation idp = createIdentityProvider(IDP_OIDC_ALIAS, IDP_OIDC_PROVIDER_ID);
-            Map<String, String> config = idp.getConfig();
-            applyDefaultConfiguration(suiteContext, config);
-            config.put("forwardParameters", FORWARDED_PARAMETER +", " + PARAMETER_NOT_SET);
-            return idp;
-        }
-    }
-
     @Override
     protected void loginUser() {
-        driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+        driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
 
         String queryString = "&" + FORWARDED_PARAMETER + "=" + FORWARDED_PARAMETER_VALUE + "&" + PARAMETER_NOT_FORWARDED + "=" + "value";
         driver.navigate().to(driver.getCurrentUrl() + queryString);
@@ -92,6 +80,18 @@ public class KcOidcBrokerParameterForwardTest extends AbstractBrokerTest {
 
         Assert.assertTrue("There must be user " + bc.getUserLogin() + " in realm " + bc.consumerRealmName(),
                 isUserFound);
+    }
+
+    private class KcOidcBrokerConfigurationWithParameterForward extends KcOidcBrokerConfiguration {
+
+        @Override
+        public IdentityProviderRepresentation setUpIdentityProvider() {
+            IdentityProviderRepresentation idp = createIdentityProvider(IDP_OIDC_ALIAS, IDP_OIDC_PROVIDER_ID);
+            Map<String, String> config = idp.getConfig();
+            applyDefaultConfiguration(config);
+            config.put("forwardParameters", FORWARDED_PARAMETER +", " + PARAMETER_NOT_SET);
+            return idp;
+        }
     }
 
 }

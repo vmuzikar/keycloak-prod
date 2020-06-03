@@ -12,7 +12,6 @@ import org.keycloak.authentication.authenticators.client.JWTClientSecretAuthenti
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.IdentityProviderRepresentation;
-import org.keycloak.testsuite.arquillian.SuiteContext;
 
 public class KcOidcBrokerClientSecretJwtTest extends AbstractBrokerTest {
 
@@ -24,8 +23,8 @@ public class KcOidcBrokerClientSecretJwtTest extends AbstractBrokerTest {
     private class KcOidcBrokerConfigurationWithJWTAuthentication extends KcOidcBrokerConfiguration {
 
         @Override
-        public List<ClientRepresentation> createProviderClients(SuiteContext suiteContext) {
-            List<ClientRepresentation> clientsRepList = super.createProviderClients(suiteContext);
+        public List<ClientRepresentation> createProviderClients() {
+            List<ClientRepresentation> clientsRepList = super.createProviderClients();
             log.info("Update provider clients to accept JWT authentication");
             for (ClientRepresentation client: clientsRepList) {
                 client.setClientAuthenticatorType(JWTClientSecretAuthenticator.PROVIDER_ID);
@@ -35,10 +34,10 @@ public class KcOidcBrokerClientSecretJwtTest extends AbstractBrokerTest {
         }
 
         @Override
-        public IdentityProviderRepresentation setUpIdentityProvider(SuiteContext suiteContext) {
+        public IdentityProviderRepresentation setUpIdentityProvider() {
             IdentityProviderRepresentation idp = createIdentityProvider(IDP_OIDC_ALIAS, IDP_OIDC_PROVIDER_ID);
             Map<String, String> config = idp.getConfig();
-            applyDefaultConfiguration(suiteContext, config);
+            applyDefaultConfiguration(config);
             config.put("clientAuthMethod", OIDCLoginProtocol.CLIENT_SECRET_JWT);
             return idp;
         }

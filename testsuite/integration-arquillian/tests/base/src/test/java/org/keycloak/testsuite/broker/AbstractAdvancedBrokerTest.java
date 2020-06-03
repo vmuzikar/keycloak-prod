@@ -47,6 +47,8 @@ import static org.keycloak.testsuite.broker.BrokerRunOnServerUtil.configurePostB
 import static org.keycloak.testsuite.broker.BrokerRunOnServerUtil.disablePostBrokerLoginFlow;
 import static org.keycloak.testsuite.broker.BrokerRunOnServerUtil.grantReadTokenRole;
 import static org.keycloak.testsuite.broker.BrokerRunOnServerUtil.revokeReadTokenRole;
+import static org.keycloak.testsuite.broker.BrokerTestTools.getConsumerRoot;
+import static org.keycloak.testsuite.broker.BrokerTestTools.getProviderRoot;
 import static org.keycloak.testsuite.broker.BrokerTestTools.waitForElementEnabled;
 import static org.keycloak.testsuite.broker.BrokerTestTools.waitForPage;
 
@@ -141,12 +143,12 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
         updateExecutions(AbstractBrokerTest::disableUpdateProfileOnFirstLogin);
         createUser(bc.consumerRealmName(), "consumer", "password", "FirstName", "LastName", "consumer@localhost.com");
 
-        driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+        driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
         logInWithBroker(bc);
         waitForAccountManagementTitle();
         accountUpdateProfilePage.assertCurrent();
-        logoutFromRealm(bc.providerRealmName());
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getProviderRoot(), bc.providerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
 
         accountFederatedIdentityPage.realm(bc.consumerRealmName());
         accountFederatedIdentityPage.open();
@@ -173,7 +175,7 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
 
         identityProviderResource.update(idpRep);
 
-        driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+        driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
         logInWithBroker(bc);
         updatePasswordPage.updatePasswords("password", "password");
         waitForAccountManagementTitle();
@@ -188,7 +190,7 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
         Client client = javax.ws.rs.client.ClientBuilder.newBuilder().register((ClientRequestFilter) request -> request.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken.get())).build();
 
         try {
-            WebTarget target = client.target(Urls.identityProviderRetrieveToken(URI.create(BrokerTestTools.getAuthRoot(suiteContext) + "/auth"), bc.getIDPAlias(), bc.consumerRealmName()));
+            WebTarget target = client.target(Urls.identityProviderRetrieveToken(URI.create(getConsumerRoot() + "/auth"), bc.getIDPAlias(), bc.consumerRealmName()));
 
             try (Response response = target.request().get()) {
                 assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
@@ -217,13 +219,13 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
 
         loginWithExistingUser();
 
-        driver.navigate().to(getAccountPasswordUrl(bc.consumerRealmName()));
+        driver.navigate().to(getAccountPasswordUrl(getConsumerRoot(), bc.consumerRealmName()));
 
         accountPasswordPage.changePassword("password", "password");
 
-        logoutFromRealm(bc.providerRealmName());
+        logoutFromRealm(getProviderRoot(), bc.providerRealmName());
 
-        driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+        driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
 
         try {
             waitForPage(driver, "log in to", true);
@@ -267,7 +269,7 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
     public void loginWithExistingUserWithErrorFromProviderIdP() {
         ClientRepresentation client = adminClient.realm(bc.providerRealmName())
                 .clients()
-                .findByClientId(bc.getIDPClientIdInProviderRealm(suiteContext))
+                .findByClientId(bc.getIDPClientIdInProviderRealm())
                 .get(0);
 
         adminClient.realm(bc.providerRealmName())
@@ -275,7 +277,7 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
                 .get(client.getId())
                 .update(ClientBuilder.edit(client).consentRequired(true).build());
 
-        driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+        driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
         logInWithBroker(bc);
 
         driver.manage().timeouts().pageLoadTimeout(30, TimeUnit.MINUTES);
@@ -299,8 +301,8 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
     @Test
     public void testDisabledUser() {
         loginUser();
-        logoutFromRealm(bc.providerRealmName());
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getProviderRoot(), bc.providerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
 
         RealmResource realm = adminClient.realm(bc.consumerRealmName());
         UserRepresentation userRep = realm.users().search(bc.getUserLogin()).get(0);
@@ -343,7 +345,7 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
         assertThat(currentRoles, hasItems(ROLE_MANAGER));
         assertThat(currentRoles, not(hasItems(ROLE_USER)));
 
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
 
 
         userResource.roles().realmLevel().add(Collections.singletonList(userRole));
@@ -355,15 +357,15 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
                 .collect(Collectors.toSet());
         assertThat(currentRoles, hasItems(ROLE_MANAGER, ROLE_USER));
 
-        logoutFromRealm(bc.providerRealmName());
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
+        logoutFromRealm(getProviderRoot(), bc.providerRealmName());
     }
 
 
     // KEYCLOAK-4016
     @Test
     public void testExpiredCode() {
-        driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+        driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
 
         log.debug("Expire all browser cookies");
         driver.manage().deleteAllCookies();
@@ -385,7 +387,7 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
         updateExecutions(AbstractBrokerTest::disableUpdateProfileOnFirstLogin);
         testingClient.server(bc.consumerRealmName()).run(configurePostBrokerLoginWithOTP(bc.getIDPAlias()));
 
-        driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+        driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
 
         logInWithBroker(bc);
 
@@ -394,13 +396,13 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
         totpPage.configure(totp.generateTOTP(totpSecret));
         RealmResource realm = adminClient.realm(bc.consumerRealmName());
         assertNumFederatedIdentities(realm.users().search(bc.getUserLogin()).get(0).getId(), 1);
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
 
         logInWithBroker(bc);
 
         loginTotpPage.assertCurrent();
         loginTotpPage.login(totp.generateTOTP(totpSecret));
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
 
         testingClient.server(bc.consumerRealmName()).run(disablePostBrokerLoginFlow(bc.getIDPAlias()));
         logInWithBroker(bc);
@@ -425,7 +427,7 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
         realm.update(consumerRealmRep);
 
         try {
-            driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+            driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
 
             logInWithBroker(bc);
 
@@ -433,7 +435,7 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
             String totpSecret = totpPage.getTotpSecret();
             totpPage.configure(totp.generateTOTP(totpSecret));
             assertNumFederatedIdentities(realm.users().search(bc.getUserLogin()).get(0).getId(), 1);
-            logoutFromRealm(bc.consumerRealmName());
+            logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
 
             logInWithBroker(bc);
 
@@ -456,7 +458,7 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
 
             loginTotpPage.login(totp.generateTOTP(totpSecret));
             waitForAccountManagementTitle();
-            logoutFromRealm(bc.consumerRealmName());
+            logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
         } finally {
             testingClient.server(bc.consumerRealmName()).run(disablePostBrokerLoginFlow(bc.getIDPAlias()));
 
@@ -482,7 +484,7 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
             idp.getConfig().put("backchannelSupported", "false");
             adminClient.realm(bc.consumerRealmName()).identityProviders().get(bc.getIDPAlias()).update(idp);
             Time.setOffset(2);
-            driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+            driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
             logInWithBroker(bc);
             waitForPage(driver, "update account information", false);
             updateAccountInformationPage.assertCurrent();
@@ -514,7 +516,7 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
             adminClient.realm(bc.consumerRealmName()).components().add(component);
 
             createUser(bc.providerRealmName(), "test-user", "password", "FirstName", "LastName", "test-user@localhost.com");
-            driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+            driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
             loginPage.clickSocial(bc.getIDPAlias());
             loginPage.login("test-user", "password");
             waitForAccountManagementTitle();
@@ -527,11 +529,11 @@ public abstract class AbstractAdvancedBrokerTest extends AbstractBrokerTest {
             accountPasswordPage.changePassword("secret", "new-password", "new-password");
             assertEquals("Your password has been updated.", accountUpdateProfilePage.getSuccess());
 
-            logoutFromRealm(bc.providerRealmName());
-            logoutFromRealm(bc.consumerRealmName());
+            logoutFromRealm(getProviderRoot(), bc.providerRealmName());
+            logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
 
             createUser(bc.providerRealmName(), "test-user-noemail", "password", "FirstName", "LastName", "test-user-noemail@localhost.com");
-            driver.navigate().to(getAccountUrl(bc.consumerRealmName()));
+            driver.navigate().to(getAccountUrl(getConsumerRoot(), bc.consumerRealmName()));
             loginPage.clickSocial(bc.getIDPAlias());
             loginPage.login("test-user-noemail", "password");
             waitForAccountManagementTitle();

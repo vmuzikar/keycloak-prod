@@ -76,13 +76,13 @@ public class AccountBrokerTest extends AbstractBaseBrokerTest {
         log.debug("adding identity provider to realm " + bc.consumerRealmName());
 
         RealmResource realm = adminClient.realm(bc.consumerRealmName());
-        realm.identityProviders().create(bc.setUpIdentityProvider(suiteContext)).close();
+        realm.identityProviders().create(bc.setUpIdentityProvider()).close();
         realm.identityProviders().get(bc.getIDPAlias());
     }
 
     @Before
     public void addClients() {
-        List<ClientRepresentation> clients = bc.createProviderClients(suiteContext);
+        List<ClientRepresentation> clients = bc.createProviderClients();
         if (clients != null) {
             RealmResource providerRealm = adminClient.realm(bc.providerRealmName());
             for (ClientRepresentation client : clients) {
@@ -97,7 +97,7 @@ public class AccountBrokerTest extends AbstractBaseBrokerTest {
             }
         }
 
-        clients = bc.createConsumerClients(suiteContext);
+        clients = bc.createConsumerClients();
         if (clients != null) {
             RealmResource consumerRealm = adminClient.realm(bc.consumerRealmName());
             for (ClientRepresentation client : clients) {
