@@ -21,6 +21,7 @@ import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.descriptor.api.Descriptor;
 import org.keycloak.testsuite.arquillian.AuthServerTestEnricher;
 import org.keycloak.testsuite.arquillian.SuiteContext;
+import org.keycloak.testsuite.util.ServerURLs;
 
 /**
  * @author mhajas
@@ -86,7 +87,7 @@ public class KeycloakQuarkusServerDeployableContainer implements DeployableConta
     }
 
     private Process startContainer() throws IOException {
-        if (AuthServerTestEnricher.AUTH_SERVER_SSL_REQUIRED) {
+        if (ServerURLs.AUTH_SERVER_SSL_REQUIRED) {
             throw new IllegalStateException("Quarkus server does not yet support SSL");
         }
 

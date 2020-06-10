@@ -130,6 +130,13 @@ declare namespace Keycloak {
 		silentCheckSsoRedirectUri?: string;
 
 		/**
+		 * Specifies whether the silent check-sso should fallback to "non-silent"
+		 * check-sso when 3rd party cookies are blocked by the browser. Defaults
+		 * to true.
+		 */
+		silentCheckSsoFallback?: boolean;
+
+		/**
 		 * Set the OpenID Connect flow.
 		 * @default standard
 		 */
