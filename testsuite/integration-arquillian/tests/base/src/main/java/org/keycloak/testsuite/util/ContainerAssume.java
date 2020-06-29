@@ -54,6 +54,10 @@ public class ContainerAssume {
     }
 
     public static void assumeAppServerSSL() {
-        Assume.assumeTrue("Only works with the SSL configured", APP_SERVER_SSL_REQUIRED);
+        Assume.assumeTrue("Only works with the SSL configured for app server", APP_SERVER_SSL_REQUIRED);
+    }
+
+    public static void assumeNotAppServerSSL() {
+        Assume.assumeFalse("Only works with the SSL disabled for app server", APP_SERVER_SSL_REQUIRED);
     }
 }
