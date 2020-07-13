@@ -61,7 +61,7 @@ public final class SuiteContext {
      */
     private static final boolean adapterCompatTesting = parseBoolean(System.getProperty("testsuite.adapter.compat.testing"));
 
-    private static final boolean browserStrictCookies = parseBoolean(System.getProperty("browser.strict.cookies"));
+    public static final boolean BROWSER_STRICT_COOKIES = parseBoolean(System.getProperty("browser.strict.cookies"));
 
     public SuiteContext(Set<ContainerInfo> arquillianContainers) {
         this.container = arquillianContainers;
@@ -183,10 +183,6 @@ public final class SuiteContext {
 
     public boolean isAdapterCompatTesting() {
         return adapterCompatTesting;
-    }
-
-    public boolean hasBrowserStrictCookies() {
-        return browserStrictCookies;
     }
 
     @Override
