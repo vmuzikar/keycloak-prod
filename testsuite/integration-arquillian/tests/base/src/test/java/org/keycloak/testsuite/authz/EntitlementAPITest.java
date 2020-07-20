@@ -90,6 +90,7 @@ import org.keycloak.representations.idm.authorization.UserPolicyRepresentation;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import org.keycloak.testsuite.admin.ApiUtil;
+import org.keycloak.testsuite.client.resources.TestApplicationResourceUrls;
 import org.keycloak.testsuite.util.ClientBuilder;
 import org.keycloak.testsuite.util.OAuthClient;
 import org.keycloak.testsuite.util.RealmBuilder;
@@ -139,7 +140,7 @@ public class EntitlementAPITest extends AbstractAuthzTest {
                         .authorizationServicesEnabled(true)
                         .redirectUris("http://localhost/resource-server-test")
                         .defaultRoles("uma_protection")
-                        .pairwise("http://pairwise.com")
+                        .pairwise(TestApplicationResourceUrls.pairwiseSectorIdentifierUri())
                         .directAccessGrants())
                 .client(ClientBuilder.create().clientId(TEST_CLIENT)
                         .secret("secret")
@@ -150,13 +151,19 @@ public class EntitlementAPITest extends AbstractAuthzTest {
                         .secret("secret")
                         .authorizationServicesEnabled(true)
                         .redirectUris("http://localhost/test-client")
-                        .pairwise("http://pairwise.com")
+                        .pairwise(TestApplicationResourceUrls.pairwiseSectorIdentifierUri())
                         .directAccessGrants())
                 .client(ClientBuilder.create().clientId(PUBLIC_TEST_CLIENT)
                         .secret("secret")
                         .redirectUris("http://localhost:8180/auth/realms/master/app/auth/*", "https://localhost:8543/auth/realms/master/app/auth/*")
                         .publicClient())
                 .build());
+
+        configureSectorIdentifierRedirectUris();
+    }
+
+    private void configureSectorIdentifierRedirectUris() {
+        testingClient.testApp().oidcClientEndpoints().setSectorIdentifierRedirectUris(Arrays.asList("http://localhost/resource-server-test", "http://localhost/test-client"));
     }
 
     @Before
@@ -1797,6 +1804,7 @@ public class EntitlementAPITest extends AbstractAuthzTest {
         controller.stop(suiteContext.getAuthServerInfo().getQualifier());
         controller.start(suiteContext.getAuthServerInfo().getQualifier());
         reconnectAdminClient();
+        configureSectorIdentifierRedirectUris();
 
         TokenIntrospectionResponse introspectionResponse = authzClient.protection().introspectRequestingPartyToken(response.getToken());
 
