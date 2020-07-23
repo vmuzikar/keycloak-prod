@@ -185,8 +185,7 @@ public class IdentityProviderTest extends AbstractAdminTest {
             oidcConfig.setAuthorizationUrl("invalid://test");
 
             try (Response response = this.realm.identityProviders().create(newIdentityProvider)) {
-                assertEquals(AUTH_SERVER_SSL_REQUIRED ? Response.Status.BAD_REQUEST.getStatusCode() :
-                        Response.Status.CREATED.getStatusCode(), response.getStatus());
+                assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
                 ErrorRepresentation error = response.readEntity(ErrorRepresentation.class);
                 assertEquals("The url [authorization_url] is malformed", error.getErrorMessage());
             }
@@ -195,8 +194,7 @@ public class IdentityProviderTest extends AbstractAdminTest {
             oidcConfig.setTokenUrl("http://test");
 
             try (Response response = this.realm.identityProviders().create(newIdentityProvider)) {
-                assertEquals(AUTH_SERVER_SSL_REQUIRED ? Response.Status.BAD_REQUEST.getStatusCode() :
-                        Response.Status.CREATED.getStatusCode(), response.getStatus());
+                assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
                 ErrorRepresentation error = response.readEntity(ErrorRepresentation.class);
                 assertEquals("The url [token_url] requires secure connections", error.getErrorMessage());
             }
@@ -206,8 +204,7 @@ public class IdentityProviderTest extends AbstractAdminTest {
             oidcConfig.setJwksUrl("http://test");
 
             try (Response response = this.realm.identityProviders().create(newIdentityProvider)) {
-                assertEquals(AUTH_SERVER_SSL_REQUIRED ? Response.Status.BAD_REQUEST.getStatusCode() :
-                        Response.Status.CREATED.getStatusCode(), response.getStatus());
+                assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
                 ErrorRepresentation error = response.readEntity(ErrorRepresentation.class);
                 assertEquals("The url [jwks_url] requires secure connections", error.getErrorMessage());
             }
@@ -218,8 +215,7 @@ public class IdentityProviderTest extends AbstractAdminTest {
             oidcConfig.setLogoutUrl("http://test");
 
             try (Response response = this.realm.identityProviders().create(newIdentityProvider)) {
-                assertEquals(AUTH_SERVER_SSL_REQUIRED ? Response.Status.BAD_REQUEST.getStatusCode() :
-                        Response.Status.CREATED.getStatusCode(), response.getStatus());
+                assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
                 ErrorRepresentation error = response.readEntity(ErrorRepresentation.class);
                 assertEquals("The url [logout_url] requires secure connections", error.getErrorMessage());
             }
@@ -231,8 +227,7 @@ public class IdentityProviderTest extends AbstractAdminTest {
             oidcConfig.setUserInfoUrl("http://test");
 
             try (Response response = this.realm.identityProviders().create(newIdentityProvider)) {
-                assertEquals(AUTH_SERVER_SSL_REQUIRED ? Response.Status.BAD_REQUEST.getStatusCode() :
-                        Response.Status.CREATED.getStatusCode(), response.getStatus());
+                assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
                 ErrorRepresentation error = response.readEntity(ErrorRepresentation.class);
                 assertEquals("The url [userinfo_url] requires secure connections", error.getErrorMessage());
             }
