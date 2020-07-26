@@ -44,7 +44,7 @@
         <wildfly.version>18.0.1.Final</wildfly.version>
         <wildfly.build-tools.version>1.2.12.Final</wildfly.build-tools.version>
         <eap.version>7.3.2.GA-redhat-00002</eap.version>
-        <wildfly.core.version>10.1.11.Final</wildfly.core.version>
+        <wildfly.core.version>10.0.3.Final</wildfly.core.version>
 
         <jboss.as.version>7.2.0.Final</jboss.as.version>
         <jboss.as.subsystem.test.version>7.5.22.Final-redhat-1</jboss.as.subsystem.test.version>
@@ -86,13 +86,13 @@
         <slf4j-api.version>1.7.22</slf4j-api.version>
         <slf4j.version>1.7.22</slf4j.version>
         <sun.istack.version>3.0.10</sun.istack.version>
-        <sun.xml.bind.version>2.3.3.b02</sun.xml.bind.version>
+        <sun.xml.bind.version>2.3.1</sun.xml.bind.version>
         <javax.xml.bind.jaxb.version>2.3.1</javax.xml.bind.jaxb.version>
         <sun.xml.ws.version>2.3.1</sun.xml.ws.version>
         <sun.activation.version>1.2.1</sun.activation.version>
         <org.glassfish.jaxb.xsom.version>2.3.1</org.glassfish.jaxb.xsom.version>
-        <undertow.version>2.0.30.SP4</undertow.version>
-        <elytron.version>1.10.7.Final</elytron.version>
+        <undertow.version>2.0.28.Final</undertow.version>
+        <elytron.version>1.10.4.Final</elytron.version>
         <elytron.undertow-server.version>1.6.0.Final</elytron.undertow-server.version>
         <jetty92.version>9.2.4.v20141103</jetty92.version>
         <jetty93.version>9.3.9.v20160517</jetty93.version>
