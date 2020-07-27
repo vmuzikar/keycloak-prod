@@ -23,7 +23,6 @@ import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.FederatedIdentityRepresentation;
 import org.keycloak.representations.idm.IdentityProviderRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.keycloak.testsuite.arquillian.SuiteContext;
 import org.keycloak.testsuite.broker.oidc.LegacyIdIdentityProviderFactory;
 import org.keycloak.testsuite.util.FederatedIdentityBuilder;
 import org.keycloak.testsuite.util.UserBuilder;
@@ -33,6 +32,8 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.keycloak.testsuite.admin.ApiUtil.createUserWithAdminClient;
 import static org.keycloak.testsuite.broker.BrokerTestConstants.IDP_OIDC_ALIAS;
+import static org.keycloak.testsuite.broker.BrokerTestTools.getConsumerRoot;
+import static org.keycloak.testsuite.broker.BrokerTestTools.getProviderRoot;
 import static org.keycloak.testsuite.broker.oidc.LegacyIdIdentityProvider.LEGACY_ID;
 
 /**
@@ -52,8 +53,8 @@ public class BrokerWithLegacyIdTest extends AbstractInitializedBaseBrokerTest {
     protected BrokerConfiguration getBrokerConfiguration() {
         return new KcOidcBrokerConfiguration() {
             @Override
-            public IdentityProviderRepresentation setUpIdentityProvider(SuiteContext suiteContext) {
-                IdentityProviderRepresentation idp = super.setUpIdentityProvider(suiteContext);
+            public IdentityProviderRepresentation setUpIdentityProvider() {
+                IdentityProviderRepresentation idp = super.setUpIdentityProvider();
                 idp.setProviderId(LegacyIdIdentityProviderFactory.PROVIDER_ID);
                 return idp;
             }
@@ -86,8 +87,8 @@ public class BrokerWithLegacyIdTest extends AbstractInitializedBaseBrokerTest {
         assertEquals(userId, getFederatedIdentity().getUserId());
         assertLoggedInAccountManagement(consumerUser.getUsername(), consumerUser.getEmail());
 
-        logoutFromRealm(bc.providerRealmName());
-        logoutFromRealm(bc.consumerRealmName());
+        logoutFromRealm(getProviderRoot(), bc.providerRealmName());
+        logoutFromRealm(getConsumerRoot(), bc.consumerRealmName());
 
         // try to login again to double check the new ID works
         logInAsUserInIDP();
