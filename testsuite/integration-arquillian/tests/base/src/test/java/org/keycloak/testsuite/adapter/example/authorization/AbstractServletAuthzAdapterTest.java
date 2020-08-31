@@ -16,6 +16,7 @@
  */
 package org.keycloak.testsuite.adapter.example.authorization;
 
+import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.keycloak.admin.client.resource.ClientPoliciesResource;
@@ -39,6 +40,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.keycloak.testsuite.util.WaitUtils.waitUntilElement;
 
@@ -366,6 +368,20 @@ public abstract class AbstractServletAuthzAdapterTest extends AbstractBaseServle
             waitUntilElement(By.tagName("h2")).text().contains("keycloak-7269/test");
             driver.navigate().to(getResourceServerUrl() + "/keycloak-7269/sub-resource2/test.jsp");
             waitUntilElement(By.tagName("h2")).text().contains("keycloak-7269/sub-resource2/test");
+        });
+    }
+
+    @Test
+    public void testGrantedScopesInPathConfigUsingAuthorizationContext() {
+        performTests(() -> {
+            login("alice", "alice");
+            driver.navigate().to(getResourceServerUrl() + "/protected/scopes.jsp");
+            WaitUtils.waitForPageToLoad();
+
+            String pageSource = driver.getPageSource();
+            assertThat(pageSource, Matchers.containsString("Granted"));
+            assertThat(pageSource, Matchers.containsString("Do read stuff"));
+            assertThat(pageSource, Matchers.not(Matchers.containsString("Do write stuff")));
         });
     }
 }
