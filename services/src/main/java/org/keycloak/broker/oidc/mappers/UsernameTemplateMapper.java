@@ -20,6 +20,7 @@ package org.keycloak.broker.oidc.mappers;
 import org.keycloak.broker.oidc.KeycloakOIDCIdentityProviderFactory;
 import org.keycloak.broker.oidc.OIDCIdentityProviderFactory;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
+import org.keycloak.broker.saml.mappers.UsernameTemplateMapper.Target;
 import org.keycloak.models.IdentityProviderMapperModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
@@ -42,8 +43,14 @@ import org.keycloak.social.twitter.TwitterIdentityProviderFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static org.keycloak.broker.saml.mappers.UsernameTemplateMapper.TARGET;
+import static org.keycloak.broker.saml.mappers.UsernameTemplateMapper.TARGETS;
+import static org.keycloak.broker.saml.mappers.UsernameTemplateMapper.TRANSFORMERS;
+import static org.keycloak.broker.saml.mappers.UsernameTemplateMapper.getTarget;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -78,9 +85,19 @@ public class UsernameTemplateMapper extends AbstractClaimMapper {
         property = new ProviderConfigProperty();
         property.setName(TEMPLATE);
         property.setLabel("Template");
-        property.setHelpText("Template to use to format the username to import.  Substitutions are enclosed in ${}.  For example: '${ALIAS}.${CLAIM.sub}'.  ALIAS is the provider alias.  CLAIM.<NAME> references an ID or Access token claim.");
+        property.setHelpText("Template to use to format the username to import.  Substitutions are enclosed in ${}.  For example: '${ALIAS}.${CLAIM.sub}'.  ALIAS is the provider alias.  CLAIM.<NAME> references an ID or Access token claim. \n"
+          + "The substitution can be converted to upper or lower case by appending |uppercase or |lowercase to the substituted value, e.g. '${CLAIM.sub | lowercase}");
         property.setType(ProviderConfigProperty.STRING_TYPE);
         property.setDefaultValue("${ALIAS}.${CLAIM.preferred_username}");
+        configProperties.add(property);
+
+        property = new ProviderConfigProperty();
+        property.setName(TARGET);
+        property.setLabel("Target");
+        property.setHelpText("Destination field for the mapper. LOCAL (default) means that the changes are applied to the username stored in local database upon user import. BROKER_ID and BROKER_USERNAME means that the changes are stored into the ID or username used for federation user lookup, respectively.");
+        property.setType(ProviderConfigProperty.LIST_TYPE);
+        property.setOptions(TARGETS);
+        property.setDefaultValue(Target.LOCAL.toString());
         configProperties.add(property);
     }
 
@@ -115,33 +132,35 @@ public class UsernameTemplateMapper extends AbstractClaimMapper {
     public void updateBrokeredUser(KeycloakSession session, RealmModel realm, UserModel user, IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
     }
 
-    static Pattern substitution = Pattern.compile("\\$\\{([^}]+)\\}");
+    private static final Pattern SUBSTITUTION = Pattern.compile("\\$\\{([^}]+?)(?:\\s*\\|\\s*(\\S+)\\s*)?\\}");
 
     @Override
     public void preprocessFederatedIdentity(KeycloakSession session, RealmModel realm, IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
         String template = mapperModel.getConfig().get(TEMPLATE);
-        Matcher m = substitution.matcher(template);
+        Matcher m = SUBSTITUTION.matcher(template);
         StringBuffer sb = new StringBuffer();
         while (m.find()) {
             String variable = m.group(1);
+            UnaryOperator<String> transformer = Optional.ofNullable(m.group(2)).map(TRANSFORMERS::get).orElse(UnaryOperator.identity());
+
             if (variable.equals("ALIAS")) {
-                m.appendReplacement(sb, context.getIdpConfig().getAlias());
+                m.appendReplacement(sb, transformer.apply(context.getIdpConfig().getAlias()));
             } else if (variable.equals("UUID")) {
-                m.appendReplacement(sb, KeycloakModelUtils.generateId());
+                m.appendReplacement(sb, transformer.apply(KeycloakModelUtils.generateId()));
             } else if (variable.startsWith("CLAIM.")) {
                 String name = variable.substring("CLAIM.".length());
                 Object value = AbstractClaimMapper.getClaimValue(context, name);
                 if (value == null) value = "";
-                m.appendReplacement(sb, value.toString());
+                m.appendReplacement(sb, transformer.apply(value.toString()));
             } else {
                 m.appendReplacement(sb, m.group(1));
             }
 
         }
         m.appendTail(sb);
-        String username = sb.toString();
-        context.setModelUsername(username);
 
+        Target t = getTarget(mapperModel.getConfig().get(TARGET));
+        t.set(context, sb.toString());
     }
 
     @Override
