@@ -621,6 +621,7 @@ public class TokenEndpoint {
 
 
         event.success();
+        AuthenticationManager.logSuccess(session, authSession);
 
         return cors.builder(Response.ok(res, MediaType.APPLICATION_JSON_TYPE)).build();
     }
