@@ -1,7 +1,9 @@
 {
   "mvn": {
-    "profiles": ["product", "!community", "jboss-release", "distribution-downloads"],
+    "profiles": ["product", "jboss-release", "distribution-downloads"],
     "properties": {
+      "product": "true",
+      "community": "false",
       "skipTests": "true",
       "npmRegistryURL": "$NPM_REGISTRY_INSTANCE_URL"
     }

@@ -23,8 +23,8 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    
-    <groupId>${galleon-adapter-group-id}</groupId>
+    <!-- workaround PME issue: see NCLSUP-64 -->
+    <groupId>org.jboss.sso</groupId>
     <artifactId>keycloak-adapter-galleon-pack</artifactId>
 
     <name>Keycloak Galleon Feature Pack: Adapter</name>
