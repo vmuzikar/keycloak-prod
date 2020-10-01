@@ -144,6 +144,10 @@ public class UserAdapter implements CachedUserModel {
     @Override
     public void setAttribute(String name, List<String> values) {
         getDelegateForUpdate();
+        if (UserModel.USERNAME.equals(name) || UserModel.EMAIL.equals(name)) {
+            String lowerCasedFirstValue = KeycloakModelUtils.toLowerCaseSafe((values != null && values.size() > 0) ? values.get(0) : null);
+            if (lowerCasedFirstValue != null) values=Collections.singletonList(lowerCasedFirstValue);
+        }
         updated.setAttribute(name, values);
     }
 

@@ -60,6 +60,7 @@ import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.A
 import org.keycloak.testsuite.arquillian.annotation.EnableFeature;
 import org.keycloak.testsuite.util.OAuthClient;
 import org.keycloak.testsuite.util.TokenUtil;
+import org.keycloak.testsuite.util.UserBuilder;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -76,7 +77,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.keycloak.common.Profile.Feature.ACCOUNT_API;
-import org.keycloak.testsuite.util.UserBuilder;
 
 /**
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
@@ -98,6 +98,49 @@ public class AccountRestServiceTest extends AbstractRestServiceTest {
     }
 
     @Test
+    public void testUpdateSingleField() throws IOException {
+        UserRepresentation user = SimpleHttp.doGet(getAccountUrl(null), httpClient).auth(tokenUtil.getToken()).asJson(UserRepresentation.class);
+        String originalUsername = user.getUsername();
+        String originalFirstName = user.getFirstName();
+        String originalLastName = user.getLastName();
+        String originalEmail = user.getEmail();
+        Map<String, List<String>> originalAttributes = new HashMap<>(user.getAttributes());
+
+        try {
+            RealmRepresentation realmRep = adminClient.realm("test").toRepresentation();
+
+            realmRep.setRegistrationEmailAsUsername(false);
+            adminClient.realm("test").update(realmRep);
+
+            user.setFirstName(null);
+            user.setLastName("Bob");
+            user.setEmail(null);
+            user.getAttributes().clear();
+
+            user = updateAndGet(user);
+
+            assertEquals(user.getLastName(), "Bob");
+            assertEquals(user.getFirstName(), originalFirstName);
+            assertEquals(user.getEmail(), originalEmail);
+
+        } finally {
+            RealmRepresentation realmRep = adminClient.realm("test").toRepresentation();
+            realmRep.setEditUsernameAllowed(true);
+            adminClient.realm("test").update(realmRep);
+
+            user.setUsername(originalUsername);
+            user.setFirstName(originalFirstName);
+            user.setLastName(originalLastName);
+            user.setEmail(originalEmail);
+            user.setAttributes(originalAttributes);
+            SimpleHttp.Response response = SimpleHttp.doPost(getAccountUrl(null), httpClient).auth(tokenUtil.getToken()).json(user).asResponse();
+            System.out.println(response.asString());
+            assertEquals(204, response.getStatus());
+        }
+
+    }
+
+    @Test
     public void testUpdateProfile() throws IOException {
         UserRepresentation user = SimpleHttp.doGet(getAccountUrl(null), httpClient).auth(tokenUtil.getToken()).asJson(UserRepresentation.class);
         String originalUsername = user.getUsername();
@@ -107,6 +150,11 @@ public class AccountRestServiceTest extends AbstractRestServiceTest {
         Map<String, List<String>> originalAttributes = new HashMap<>(user.getAttributes());
 
         try {
+            RealmRepresentation realmRep = adminClient.realm("test").toRepresentation();
+
+            realmRep.setRegistrationEmailAsUsername(false);
+            adminClient.realm("test").update(realmRep);
+
             user.setFirstName("Homer");
             user.setLastName("Simpsons");
             user.getAttributes().put("attr1", Collections.singletonList("val1"));
@@ -144,11 +192,6 @@ public class AccountRestServiceTest extends AbstractRestServiceTest {
             user = updateAndGet(user);
             assertEquals("test-user@localhost", user.getEmail());
 
-            // Update username
-            user.setUsername("updatedUsername");
-            user = updateAndGet(user);
-            assertEquals("updatedusername", user.getUsername());
-
             user.setUsername("john-doh@localhost");
             updateError(user, 409, Messages.USERNAME_EXISTS);
 
@@ -156,8 +199,24 @@ public class AccountRestServiceTest extends AbstractRestServiceTest {
             user = updateAndGet(user);
             assertEquals("test-user@localhost", user.getUsername());
 
-            RealmRepresentation realmRep = adminClient.realm("test").toRepresentation();
+
+            realmRep.setRegistrationEmailAsUsername(true);
+            adminClient.realm("test").update(realmRep);
+
+            user.setUsername("updatedUsername");
+            user = updateAndGet(user);
+            assertEquals("test-user@localhost", user.getUsername());
+
+            realmRep.setRegistrationEmailAsUsername(false);
+            adminClient.realm("test").update(realmRep);
+
+            user.setUsername("updatedUsername");
+            user = updateAndGet(user);
+            assertEquals("updatedusername", user.getUsername());
+
+
             realmRep.setEditUsernameAllowed(false);
+            realmRep.setRegistrationEmailAsUsername(false);
             adminClient.realm("test").update(realmRep);
 
             user.setUsername("updatedUsername2");

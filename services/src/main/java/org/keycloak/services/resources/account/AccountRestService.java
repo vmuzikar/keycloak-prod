@@ -19,8 +19,10 @@ package org.keycloak.services.resources.account;
 import org.jboss.resteasy.annotations.cache.NoCache;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.common.ClientConnection;
+import org.keycloak.common.enums.AccountRestApiVersion;
+import org.keycloak.common.Profile;
 import org.keycloak.common.util.StringPropertyReplacer;
-import org.keycloak.events.Details;
+import org.keycloak.credential.CredentialModel;
 import org.keycloak.events.EventBuilder;
 import org.keycloak.events.EventStoreProvider;
 import org.keycloak.events.EventType;
@@ -39,10 +41,23 @@ import org.keycloak.representations.account.ConsentScopeRepresentation;
 import org.keycloak.representations.account.UserRepresentation;
 import org.keycloak.services.ErrorResponse;
 import org.keycloak.services.managers.Auth;
+import org.keycloak.services.managers.UserSessionManager;
 import org.keycloak.services.messages.Messages;
 import org.keycloak.services.resources.Cors;
 import org.keycloak.services.resources.account.resources.ResourcesService;
+import org.keycloak.services.util.ResolveRelative;
 import org.keycloak.storage.ReadOnlyException;
+import org.keycloak.theme.Theme;
+import org.keycloak.userprofile.LegacyUserProfileProviderFactory;
+import org.keycloak.userprofile.UserProfileProvider;
+import org.keycloak.userprofile.utils.UserProfileUpdateHelper;
+import org.keycloak.userprofile.profile.represenations.AccountUserRepresentationUserProfile;
+import org.keycloak.userprofile.profile.DefaultUserProfileContext;
+import org.keycloak.userprofile.profile.represenations.UserModelUserProfile;
+import org.keycloak.userprofile.validation.UserProfileValidationResult;
+import org.keycloak.userprofile.validation.UserUpdateEvent;
+import org.keycloak.common.Profile;
+import org.keycloak.theme.Theme;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -54,6 +69,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -69,10 +85,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.keycloak.common.Profile;
-import org.keycloak.credential.CredentialModel;
-import org.keycloak.theme.Theme;
 
 /**
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
@@ -142,7 +154,14 @@ public class AccountRestService {
         rep.setLastName(user.getLastName());
         rep.setEmail(user.getEmail());
         rep.setEmailVerified(user.isEmailVerified());
-        rep.setAttributes(user.getAttributes());
+        rep.setEmailVerified(user.isEmailVerified());
+        Map<String, List<String>> attributes = user.getAttributes();
+        Map<String, List<String>> copiedAttributes = new HashMap<>(attributes);
+        copiedAttributes.remove(UserModel.FIRST_NAME);
+        copiedAttributes.remove(UserModel.LAST_NAME);
+        copiedAttributes.remove(UserModel.EMAIL);
+        copiedAttributes.remove(UserModel.USERNAME);
+        rep.setAttributes(copiedAttributes);
 
         return Cors.add(request, Response.ok(rep)).auth().allowedOrigins(auth.getToken()).build();
     }
@@ -152,69 +171,26 @@ public class AccountRestService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @NoCache
-    public Response updateAccount(UserRepresentation userRep) {
+    public Response updateAccount(UserRepresentation rep) {
         auth.require(AccountRoles.MANAGE_ACCOUNT);
 
-        event.event(EventType.UPDATE_PROFILE).client(auth.getClient()).user(user);
+        event.event(EventType.UPDATE_PROFILE).client(auth.getClient()).user(auth.getUser());
+
+        UserProfileProvider profileProvider = session.getProvider(UserProfileProvider.class, LegacyUserProfileProviderFactory.PROVIDER_ID);
+        AccountUserRepresentationUserProfile updatedUser = new AccountUserRepresentationUserProfile(rep);
+        DefaultUserProfileContext updateContext =
+                new DefaultUserProfileContext(UserUpdateEvent.Account, new UserModelUserProfile(user), updatedUser);
+        UserProfileValidationResult result = profileProvider.validate(updateContext);
+
+        if (result.hasFailureOfErrorType(Messages.READ_ONLY_USERNAME))
+            return ErrorResponse.error(Messages.READ_ONLY_USERNAME, Response.Status.BAD_REQUEST);
+        if (result.hasFailureOfErrorType(Messages.USERNAME_EXISTS))
+            return ErrorResponse.exists(Messages.USERNAME_EXISTS);
+        if (result.hasFailureOfErrorType(Messages.EMAIL_EXISTS))
+            return ErrorResponse.exists(Messages.EMAIL_EXISTS);
 
         try {
-            RealmModel realm = session.getContext().getRealm();
-
-            boolean usernameChanged = userRep.getUsername() != null && !userRep.getUsername().equals(user.getUsername());
-            if (realm.isEditUsernameAllowed()) {
-                if (usernameChanged) {
-                    UserModel existing = session.users().getUserByUsername(userRep.getUsername(), realm);
-                    if (existing != null) {
-                        return ErrorResponse.exists(Messages.USERNAME_EXISTS);
-                    }
-
-                    user.setUsername(userRep.getUsername());
-                }
-            } else if (usernameChanged) {
-                return ErrorResponse.error(Messages.READ_ONLY_USERNAME, Response.Status.BAD_REQUEST);
-            }
-
-            boolean emailChanged = userRep.getEmail() != null && !userRep.getEmail().equals(user.getEmail());
-            if (emailChanged && !realm.isDuplicateEmailsAllowed()) {
-                UserModel existing = session.users().getUserByEmail(userRep.getEmail(), realm);
-                if (existing != null) {
-                    return ErrorResponse.exists(Messages.EMAIL_EXISTS);
-                }
-            }
-
-            if (emailChanged && realm.isRegistrationEmailAsUsername() && !realm.isDuplicateEmailsAllowed()) {
-                UserModel existing = session.users().getUserByUsername(userRep.getEmail(), realm);
-                if (existing != null) {
-                    return ErrorResponse.exists(Messages.USERNAME_EXISTS);
-                }
-            }
-
-            if (emailChanged) {
-                String oldEmail = user.getEmail();
-                user.setEmail(userRep.getEmail());
-                user.setEmailVerified(false);
-                event.clone().event(EventType.UPDATE_EMAIL).detail(Details.PREVIOUS_EMAIL, oldEmail).detail(Details.UPDATED_EMAIL, userRep.getEmail()).success();
-
-                if (realm.isRegistrationEmailAsUsername()) {
-                    user.setUsername(userRep.getEmail());
-                }
-            }
-
-            user.setFirstName(userRep.getFirstName());
-            user.setLastName(userRep.getLastName());
-
-            if (userRep.getAttributes() != null) {
-                for (String k : user.getAttributes().keySet()) {
-                    if (!userRep.getAttributes().containsKey(k)) {
-                        user.removeAttribute(k);
-                    }
-                }
-
-                for (Map.Entry<String, List<String>> e : userRep.getAttributes().entrySet()) {
-                    user.setAttribute(e.getKey(), e.getValue());
-                }
-            }
-
+            UserProfileUpdateHelper.update(UserUpdateEvent.Account, session, user, updatedUser);
             event.success();
 
             return Cors.add(request, Response.noContent()).auth().allowedOrigins(auth.getToken()).build();
@@ -268,12 +244,12 @@ public class AccountRestService {
         }
 
         List<String> inUseClients = new LinkedList<>();
-        if(!session.sessions().getUserSessions(realm, client).isEmpty()) {
+        if (!session.sessions().getUserSessions(realm, client).isEmpty()) {
             inUseClients.add(clientId);
         }
 
         List<String> offlineClients = new LinkedList<>();
-        if(session.sessions().getOfflineSessionsCount(realm, client) > 0) {
+        if (session.sessions().getOfflineSessionsCount(realm, client) > 0) {
             offlineClients.add(clientId);
         }
 
@@ -398,15 +374,15 @@ public class AccountRestService {
                                   final ConsentRepresentation consent) {
         return upsert(clientId, consent);
     }
-    
+
     @Path("/totp/remove")
     @DELETE
     public Response removeTOTP() {
         auth.require(AccountRoles.MANAGE_ACCOUNT);
-        
+
         session.userCredentialManager().disableCredentialType(realm, user, CredentialModel.OTP);
         event.event(EventType.REMOVE_TOTP).client(auth.getClient()).user(auth.getUser()).success();
-        
+
         return Cors.add(request, Response.noContent()).build();
     }
 
