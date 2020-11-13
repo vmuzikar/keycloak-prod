@@ -93,6 +93,7 @@
                     <exclude>**/examples/**</exclude>
                     <exclude>**/grunt/**</exclude>
                     <exclude>**/less/**</exclude>
+                    <exclude>**/*.css.map</exclude>
                     <exclude>**/sass/**</exclude>
                     <exclude>**/scss/**</exclude>
                     <exclude>**/jquery/src/**</exclude>
