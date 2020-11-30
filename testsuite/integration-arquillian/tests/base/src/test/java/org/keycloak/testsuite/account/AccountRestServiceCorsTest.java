@@ -67,6 +67,7 @@ public class AccountRestServiceCorsTest extends AbstractTestRealmKeycloakTest {
 
     @Override
     public void configureTestRealm(RealmRepresentation testRealm) {
+        testRealm.setEditUsernameAllowed(false);
     }
 
     @Rule
